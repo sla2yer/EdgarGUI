@@ -8,7 +8,7 @@ class GUI_handler:
     
     def __init__(self):
         self.downloader = EdgarDownloader()
-        self.database = EdgarDatabase(True)
+        self.database = EdgarDatabase(False)
         self.handler_files =  FileManager()
         self.result_message_list = []
         self.found_entity = False
@@ -58,7 +58,7 @@ class GUI_handler:
             self.database.commit()
             self.generateFormattedResult(institute,  filing_type)
             self.handler_files.deleteTempFilesandFolders()
-            self.database.close
+            self.database.close()
             self.found_entity = True
             return True
     

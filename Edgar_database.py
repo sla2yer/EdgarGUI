@@ -9,7 +9,7 @@ class EdgarDatabase:
         self.cursor.execute("CREATE DATABASE IF NOT EXISTS EdgarDatabase")
         self.cursor.execute("USE EdgarDatabase")
         if clead_db:
-            # self.dropTables()
+            self.dropTables()
             self.createTables()
         self.close()
     
@@ -54,52 +54,66 @@ class EdgarDatabase:
             self.cursor.execute(statement)
         self.commit()
 
-    def getSummedValuesForPosition(self, acc_f, acc_u, pcl, cusip, otm ):
+    def getSummedValuesForPosition(self, acc, pcl, cusip, otm):
+        sql = '''SELECT 
+                    SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority)
+                   
+                FROM
+                    Security, InfoTable13FData AS tf,  InfoTable13F AS tf_info, Filing AS tf_filing
+                WHERE
+                    (   (tf.infotable_id = tf_info.infotable_id)
+                            AND 
+                        (tf_info.filing_id = tf_filing.filing_id)
+                            AND
+                        (tf_filing.accession_number = %(acc)s)
+                    )
+                AND 
+                    
+                    (   (tf.cusip = %(cusip)s) 
+                            AND
+                        (Security.cusip = %(cusip)s)
+                    )
+                AND
+                    (tf.put_long_call = %(pcl)s)               
+                AND
+                    (tf.other_manager_sequence_numbers = %(otm)s) 
+
+        '''
+        self.cursor.execute(sql, {'acc': acc,  'pcl': pcl, 'cusip': cusip, 'otm': otm})
+        return self.cursor.fetchall()
+
+
+    def getSummedValuesForPosition_old(self, acc_f, acc_u, pcl, cusip, otm ):
         sql = '''SELECT 
                     SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority),
                     SUM(tu.value), SUM(tu.shares_principle_amount), SUM(tu.sole_voting_authority), SUM(tu.shared_voting_authority), SUM(tu.none_voting_authority)
                 FROM
-                    InfoTable13FData AS tf, InfoTable13FData AS tu, InfoTable13F, Filing
+                    Security, InfoTable13FData AS tf, InfoTable13FData AS tu, InfoTable13F AS tf_info, InfoTable13F AS tu_info, Filing AS tf_filing, Filing AS tu_filing
                 WHERE
-                    (tf.infotable_id = (SELECT  
-                                            infotable_id
-                                        FROM    
-                                            InfoTable13F
-                                        WHERE
-                                            (filing_id =   (SELECT 
-                                                                filing_id
-                                                            FROM    
-                                                                Filing
-                                                            WHERE 
-                                                                accession_number = %(acc_f)s
-                                                           )    
-                                            )
-                                        )                 
+                    (   (tf.infotable_id = tf_info.infotable_id)
+                        AND 
+                        (tf_info.filing_id = tf_filing.filing_id)
+                        AND
+                        (tf_filing.accession_number = %(acc_f)s)
                     )
                 AND 
-                    (tu.infotable_id = (SELECT  
-                                            infotable_id
-                                        FROM    
-                                            InfoTable13F
-                                        WHERE
-                                            (filing_id =   (SELECT 
-                                                                filing_id
-                                                            FROM    
-                                                                Filing
-                                                            WHERE 
-                                                                accession_number = %(acc_u)s
-                                                           )    
-                                            )
-                                        )                 
+                    (   (tu.infotable_id = tu_info.infotable_id)
+                        AND 
+                        (tu_info.filing_id = tu_filing.filing_id)
+                        AND
+                        (tu_filing.accession_number = %(acc_u)s)
                     )
+                
                 AND
-                    (tu.cusip = %(cusip)s)
+                    (   tf.cusip = %(cusip)s 
+                        AND
+                        tf.cusip = %(cusip)s 
+                        AND
+                        Security.cusip = %(cusip)s)
                 AND
-                    (tf.cusip = %(cusip)s)
-                AND
-                    (tu.put_long_call = %(pcl)s)
-                AND
-                    (tf.put_long_call = %(pcl)s)                    
+                    (tu.put_long_call = %(pcl)s
+                        AND
+                    tf.put_long_call = %(pcl)s)                    
                 AND
                     (tf.other_manager_sequence_numbers = %(otm)s)
                 AND
@@ -107,6 +121,77 @@ class EdgarDatabase:
         
         '''
         self.cursor.execute(sql, {'acc_f':acc_f , 'acc_u': acc_u, 'pcl': pcl, 'cusip': cusip, 'otm': otm})
+        return self.cursor.fetchall()
+
+    def getSummedValuesForPosition_test(self, acc_f, acc_u, pcl, cusip, otm):
+        # Security.name_of_issuer, SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority),
+        # SUM(tu.value), SUM(tu.shares_principle_amount), SUM(tu.sole_voting_authority), SUM(tu.shared_voting_authority), SUM(tu.none_voting_authority)
+
+        # Security.name_of_issuer, tf.value, tf.shares_principle_amount, tf.sole_voting_authority, tf.shared_voting_authority, tf.none_voting_authority,
+        # tu.value, tu.shares_principle_amount, tu.sole_voting_authority, tu.shared_voting_authority, tu.none_voting_authority
+
+        sql = '''SELECT  
+                     Security.name_of_issuer, SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority),
+         SUM(tu.value), SUM(tu.shares_principle_amount), SUM(tu.sole_voting_authority), SUM(tu.shared_voting_authority), SUM(tu.none_voting_authority)
+                FROM
+                    Security, InfoTable13FData AS tf, InfoTable13FData AS tu, InfoTable13F AS tf_info, InfoTable13F AS tu_info, Filing AS tf_filing, Filing AS tu_filing
+                WHERE
+                    (   (tf.infotable_id = tf_info.infotable_id)
+                        AND 
+                        (tf_info.filing_id = tf_filing.filing_id)
+                        AND
+                        (tf_filing.accession_number = %(acc_f)s)
+                    )
+                AND 
+                    (   (tu.infotable_id = tu_info.infotable_id)
+                        AND 
+                        (tu_info.filing_id = tu_filing.filing_id)
+                        AND
+                        (tu_filing.accession_number = %(acc_u)s)
+                    )
+                
+                AND
+                    (   (   (   tu.cusip = %(cusip)s 
+                                    OR 
+                                tu.cusip IS NULL
+                            )
+                            AND
+                            (   tf.cusip =%(cusip)s 
+                                    OR
+                                tf.cusip IS NULL
+                            )
+                        )
+                        AND
+                        Security.cusip = %(cusip)s)
+                AND
+                    (tu.put_long_call = %(pcl)s
+                        AND
+                    tf.put_long_call = %(pcl)s)                    
+                AND
+                    (tf.other_manager_sequence_numbers = %(otm)s)
+                AND
+                    (tu.other_manager_sequence_numbers = %(otm)s)     
+
+        '''
+        self.cursor.execute(sql, {'acc_f': acc_f, 'acc_u': acc_u, 'pcl': pcl, 'cusip': cusip, 'otm': otm})
+        return self.cursor.fetchall()
+
+
+    def id_test(self, acc):
+        sql = '''SELECT  
+                    infotable_id
+                FROM    
+                    InfoTable13F
+                WHERE
+                    (filing_id =   (SELECT 
+                                        filing_id
+                                    FROM    
+                                        Filing
+                                    WHERE 
+                                        accession_number = %(acc_u)s
+                                   )    
+                    )'''
+        self.cursor.execute(sql, {'acc_u': acc})
         return self.cursor.fetchall()
 
     #--------------------------THIS NEEEDS TO BE SPLIT INTO THE FROM DATE RESULTS AND THE TO DATE RESULTS----------------
@@ -275,31 +360,41 @@ class EdgarDatabase:
                             ) '''
         self.cursor.execute(sql,  {'acc_num':acc_num})
         return self.cursor.fetchall()
-        
-    
-    
+
+    # SELECT
+    #                      InfoTable13FData.other_manager_sequence_numbers, InfoTable13FData.value
+    #                  FROM
+    #                      InfoTable13FData, FilingEntity, FilingOtherManagers, Filing
+    #                  WHERE
+    #                      (InfoTable13FData.infotable_id =(  SELECT
+    #                                                              InfoTable13F.infotable_id
+    #                                                          FROM
+    #                                                              InfoTable13F
+    #                                                          WHERE
+    #                                                              InfoTable13F.filing_id =(  SELECT
+    #                                                                                          Filing.filing_id
+    #                                                                                      FROM
+    #                                                                                          Filing
+    #                                                                                      WHERE
+    #                                                                                         Filing.accession_number = '0001-44-6194-22-000002'
+    #                                                                                     )
+    #                                                         )
+    #                     )
+    #                     AND
+    #                     (InfoTable13FData.cusip = '68243Q106');
     def checkForOtherManagerSeqNums(self,  acc_num,  cusip):
-        sql = '''SELECT 
-                    InfoTable13FData.other_manager_sequence_numbers 
+        sql = '''SELECT DISTINCT
+                    InfoTable13FData.other_manager_sequence_numbers
                 FROM
-                    InfoTable13FData, FilingEntity, FilingOtherManagers, Filing
+                    InfoTable13FData, FilingEntity, FilingOtherManagers, Filing, InfoTable13F
                 WHERE
-                    (InfoTable13FData.infotable_id =(  SELECT 
-                                                            InfoTable13F.infotable_id
-                                                        FROM 
-                                                            InfoTable13F
-                                                        WHERE
-                                                            InfoTable13F.filing_id =(  SELECT
-                                                                                        Filing.filing_id
-                                                                                    FROM
-                                                                                        Filing
-                                                                                    WHERE
-                                                                                        Filing.accession_number = %(acc_num)s
-                                                                                )
-                                                    )
-                    )
+                        (InfoTable13FData.infotable_id =  InfoTable13F.infotable_id)
                     AND 
-                    (InfoTable13FData.cusip = %(cusip)s)
+                        (InfoTable13F.filing_id = Filing.filing_id)
+                    AND 
+                        (Filing.accession_number = %(acc_num)s)
+                    AND 
+                        (InfoTable13FData.cusip = %(cusip)s)
                 '''
         self.cursor.execute(sql,  {'acc_num': acc_num,  'cusip': cusip})
         return self.cursor.fetchall()
@@ -327,7 +422,7 @@ class EdgarDatabase:
         sql = ''' SELECT    
                                 SUM(InfoTable13FData.value)
                             FROM 
-                                InfoTable13FData, Security, FilingEntity, FilingOtherManagers
+                                InfoTable13FData, Security, FilingEntity, FilingOtherManagers, Filing
                             WHERE 
                                 (InfoTable13FData.infotable_id = (  SELECT 
                                                                         InfoTable13F.infotable_id 
@@ -339,15 +434,16 @@ class EdgarDatabase:
                                                                                                     FROM 
                                                                                                         Filing 
                                                                                                     WHERE 
-                                                                                                        (Filing.accession_number =  %(acc_num_1)s ) 
+                                                                                                        (Filing.accession_number =  %(acc_num_1)s )
+                                                                                                    
                                                                                                 )
                                                                 ) 
                                 ) 
                             AND ( InfoTable13FData.cusip = %(cusip_var)s )
                             AND ( InfoTable13FData.put_long_call = %(PCL)s)
-                            AND ( FilingEntity.entity_id = FilingOtherManagers.manager_entity_id )
                             AND (  InfoTable13FData.other_manager_sequence_numbers = %(other_manager)s)
                             '''
+        # AND ( FilingEntity.entity_id = FilingOtherManagers.manager_entity_id )
         self.cursor.execute(sql, {'acc_num_1': acc_num, 'cusip_var': str(cusip), 'PCL': put_call_long,
                                   'other_manager': str(other_manager)})
         return self.cursor.fetchall()

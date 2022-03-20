@@ -66,10 +66,9 @@ class FilingViewerHandler:
                 threads.append(
                     threading.Thread(target=self.generateResultLines, args=(chuncked_cusips[i], date_indexs)))
                 threads[i].start()
-
-            for t in threads:
-                t.join()
-
+            # self.generateResultLines(chuncked_cusips[0], date_indexs)
+            for thread in threads:
+                thread.join()
             self.result_lines[0].extend(self.result_lines_1)
             # print(self.result_lines[0][0])
             self.result_lines[0].extend(self.result_lines_2)
@@ -201,6 +200,10 @@ class FilingViewerHandler:
             elif '-20' in str(threading.currentThread().getName()):
                 self.result_lines_20.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
                                                                     self.filings[date_indexs[1]][0]))
+            # else testing
+            # else:
+            #     self.result_lines_1.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
+            #                                                           self.filings[date_indexs[1]][0]))
 
             x = x + 1
 
@@ -222,7 +225,7 @@ class FilingViewerHandler:
 
         # ---------------------INSTEAD OF WHATS HERE---------------------------------
         # Search for any other managers on the given CUSIP as there could be several for any one postion or CUSIP
-        # then make the lines for each other manager as postions that are for the same CUSIP but not for the same othermanager can not be summed
+        # then make the lines for each 'other manager' as postions that are for the same CUSIP but not for the same othermanager can not be summed
 
         # print("Gen position lines ")
 
@@ -247,19 +250,19 @@ class FilingViewerHandler:
 
             other_managers = []
             if 'set' in str(other_managers1):
-                set(other_managers2).update(set(other_managers1))
+                other_managers2.update(set(other_managers1))
                 for i in other_managers2:
                     other_managers.append(i[0])
             else:
-                set(other_managers1).update(set(other_managers2))
+                other_managers1.update(set(other_managers2))
                 for i in other_managers1:
                     other_managers.append(i[0])
 
             # print("ot 1 \n" + str(other_managers1) + "\not 2\n" + str(other_managers2) + "\not\n" + str(other_managers))
             del other_managers1
             del other_managers2
-            if 'None' not in other_managers:
-                other_managers.append('None')
+            # if 'None' not in other_managers:
+            #     other_managers.append('None')
             pos_lines = []
             formatted_name = self.formatName(name_and_title[0])
             ftitle = self.formatTitle(name_and_title[1])
@@ -270,9 +273,17 @@ class FilingViewerHandler:
                 # pos_lines.append(self.formatLine('Put ', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Put', cusip, ot)))
                 # pos_lines.append(self.formatLine('Call', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Call', cusip, ot)))
                 # pos_lines.append(self.formatLine('Long', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Long', cusip, ot)))
-                pos_lines.append(self.formatLine('Put ', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip))
-                pos_lines.append(self.formatLine('Call', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip))
-                pos_lines.append(self.formatLine('Long', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip))
+                res = self.formatLine('Put ', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip)
+                if res is not None:
+                    pos_lines.append(res)
+
+                res = self.formatLine('Call', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip)
+                if res is not None:
+                    pos_lines.append(res)
+
+                res = self.formatLine('Long', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip)
+                if res is not None:
+                    pos_lines.append(res)
 
             db.close()
             # if '-10' in threading.currentThread().getName():
@@ -281,25 +292,33 @@ class FilingViewerHandler:
         return pos_lines
 
     def formatLine(self, pos, name, title, ot, db, acc_num_from, acc_num_until, cusip):
-        #                       0                           1                           2                                  4                                5
-        # summed_values[0] = [  SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority),
-        #                      SUM(tu.value), SUM(tu.shares_principle_amount), SUM(tu.sole_voting_authority), SUM(tu.shared_voting_authority), SUM(tu.none_voting_authority)
-        #                           6                       7                           8                               9                                   10
+        #                       0                           1                           2                                  3                                4
+        # summed_values[0] = [  SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority) ]
+        #
         # summed_values = db.getSummedValuesForPosition(acc_num_from, acc_num_until, pos, cusip, ot)
 
-        summed_values = db.getSummedValuesForPosition(acc_num_from, acc_num_until, pos, cusip, ot)
+        summed_values_from = db.getSummedValuesForPosition(acc_num_from, pos, cusip, ot)
+        summed_values_until = db.getSummedValuesForPosition(acc_num_until, pos, cusip, ot)
+        summed_pos_value_until = summed_values_until[0][0]
+        summed_pos_shprin_until = summed_values_until[0][1]
 
-        second_summed_value = summed_values[0][6]
+        summed_pos_value_from = summed_values_from[0][0]
+        summed_pos_shprin_from = summed_values_from[0][1]
 
-        second_summed_shprin = summed_values[0][7]
+        if (summed_pos_value_from is None) and (summed_pos_value_until is None):
+            return None
 
-        if second_summed_value is None:
-            second_summed_value = 0
-        if second_summed_shprin is None:
-            second_summed_shprin = 0
+        if summed_pos_value_until is None:
+            summed_pos_value_until = 0
+        if summed_pos_shprin_until is None:
+            summed_pos_shprin_until = 0
+        if summed_pos_value_from is None:
+            summed_pos_value_from = 0
+        if summed_pos_shprin_from is None:
+            summed_pos_shprin_from = 0
 
-        position_string = name + title + self.formatSummedValue(second_summed_value, self.getPercentChange(second_summed_value, summed_values[0][0])) + \
-                          self.formatSummedValue(second_summed_shprin, self.getPercentChange(second_summed_shprin, summed_values[0][1])) + \
+        position_string = name + title + self.formatSummedValue(summed_pos_value_until, self.getPercentChange(summed_pos_value_until, summed_pos_value_from)) + \
+                          self.formatSummedValue(summed_pos_shprin_until, self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from)) + \
                           pos + "  | " + str(ot)
         return position_string
 
@@ -433,15 +452,15 @@ class FilingViewerHandler:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc)
 
         elif 'shrs/prn amount' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: x.split('|')[3].split('(')[0])
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[0]))
 
         elif 'shrs/prn change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: x.split('|')[3].split('(')[1].split('%')[0])
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[1].split('%')[0]))
         elif 'value' in sort_by:
             print('sorting value')
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: x.split('|')[2].split('(')[0])
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[2].split('(')[0]))
         elif 'value change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: x.split('|')[3].split('(')[1].split('%')[0])
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[1].split('%')[0]))
         del unchunked
         if 'All' not in pcla:
             for line in range(len(self.result_lines[0])):

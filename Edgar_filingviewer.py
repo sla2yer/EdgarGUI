@@ -9,7 +9,7 @@ class FilingViewer:
     def __init__(self,  filings,  root_parent):
         self.root = root_parent
         
-        tk.Grid.rowconfigure(self.root,  4,  weight=1)
+        tk.Grid.rowconfigure(self.root,  5,  weight=1)
         self.handler = FilingViewerHandler(filings)
         self.stringvar_sortby = tk.StringVar(self.root)
         self.cbox_sortby = tk.ttk.Combobox(self.root, textvariable=self.stringvar_sortby)

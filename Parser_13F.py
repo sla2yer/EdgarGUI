@@ -226,7 +226,7 @@ class Parser_13f:
     def getInfoTableData(self, text,  num_entries):
         list_of_positions = []
         start_index = text.find('DESCRIPTION')
-        detail_strings = [   'nameOfIssuer',  'titleOfClass', 'cusip', 'value',  'sshPrnamt',    'sshPrnamtType',  'putCall', 'investmentDiscretion',  'otherManager',  'Sole',  'Shared',  'None']
+        detail_strings = [   'nameOfIssuer',  'titleOfClass', 'cusip', 'value',  'sshPrnamt', 'sshPrnamtType',  'putCall', 'investmentDiscretion',  'otherManager',  'Sole',  'Shared',  'None']
         counter = 0
         while counter < num_entries:
             counter = counter + 1
