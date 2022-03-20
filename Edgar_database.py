@@ -6,6 +6,7 @@ class EdgarDatabase:
                                    password="ZeEdgarPass",
                                    host="localhost")
         self.cursor = self.con.cursor()
+        self.cursor.execute('SET GLOBAL connect_timeout = 10')
         self.cursor.execute("CREATE DATABASE IF NOT EXISTS EdgarDatabase")
         self.cursor.execute("USE EdgarDatabase")
         if clead_db:
