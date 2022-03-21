@@ -1,5 +1,5 @@
 # EdgarGUI
-This is still a work in progress. For the app to work the mysql user needs to be made prior to first launch, this won't be necessary in the near future
+This is still a work in progress. For the app to work the mysql user the app uses needs to be made and have SUPER privillages granted prior to first launch. this won't be necessary in the near future.
 
 A multithrreaded GUI for the SEC edgar filing system which stores parsed data in a local SQL database so that the application gets faster with each use. 
 The positions held in each filing can then be opened in a seperate window. This seperate window allows for the comparison of positions between any two 13F filings that one company has filed, as well as sorting the positons by value/principle or the percent change of the values. 
