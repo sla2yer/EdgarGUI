@@ -3,7 +3,6 @@ import tkcalendar
 import warnings
 from secedgar.filings import FilingType
 from GUI_handler import GUI_handler
-from Edgar_filingviewer import FilingViewer
 from functools import partial
 import threading
 

@@ -452,15 +452,16 @@ class FilingViewerHandler:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc)
 
         elif 'shrs/prn amount' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[0]))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[0].strip()))
 
         elif 'shrs/prn change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[1].split('%')[0]))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[3].split('(')[1].split('%')[0]))
+        elif 'value change' in sort_by:
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[2].split('(')[1].split('%')[0]))
         elif 'value' in sort_by:
             print('sorting value')
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[2].split('(')[0]))
-        elif 'value change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[1].split('%')[0]))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[2].split('(')[0].strip()))
+
         del unchunked
         if 'All' not in pcla:
             for line in range(len(self.result_lines[0])):
