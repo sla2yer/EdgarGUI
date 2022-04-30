@@ -115,9 +115,13 @@ class EdgarDatabase:
         result = self.cursor.fetchone()
         return result[0]
 
-    def updateFilingEntity(self, entity_id, irs_number, state):
-        sql = ''' UPDATE FilingEntity SET irs_number =%(irs_number)s, state_of_incorperation = %(state)s WHERE entity_id=%(entity_id)s'''
-        self.cursor.execute(sql, {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state})
+    def updateFilingEntity(self, entity_id, irs_number, state, cik):
+        if cik is None:
+            sql = ''' UPDATE FilingEntity SET  irs_number =%(irs_number)s, state_of_incorperation = %(state)s WHERE entity_id=%(entity_id)s'''
+            self.cursor.execute(sql, {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state})
+        else:
+            sql = ''' UPDATE FilingEntity SET cik = %(cik)s, irs_number =%(irs_number)s, state_of_incorperation = %(state)s WHERE entity_id=%(entity_id)s'''
+            self.cursor.execute(sql, {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state, 'cik': cik})
 
     def isAccessionNumberInDatabase(self, number):
         sql = "SELECT accession_number FROM Filing WHERE accession_number = %(number)s"
@@ -328,30 +332,44 @@ class EdgarDatabase:
         return self.cursor.fetchall()
 
     def getNameAndTitleOfSecurity(self, cusip, acc_num):
-        sql = ''' SELECT    
-                                Security.name_of_issuer, Security.title_of_class 
-                            FROM 
-                                InfoTable13FData, Security, FilingEntity, FilingOtherManagers
-                            WHERE 
-                                (InfoTable13FData.infotable_id = (  SELECT 
-                                                                        InfoTable13F.infotable_id 
-                                                                    FROM 
-                                                                        InfoTable13F 
-                                                                    WHERE 
-                                                                        InfoTable13F.filing_id =( SELECT 
-                                                                                                        Filing.filing_id 
-                                                                                                    FROM 
-                                                                                                        Filing 
-                                                                                                    WHERE 
-                                                                                                        (Filing.accession_number =  %(acc_num_1)s ) 
-                                                                                                )
-                                                                ) 
-                                ) 
-                            AND ( Security.cusip = %(cusip_var)s )
-                            AND ( Security.cusip = InfoTable13FData.cusip )
-                            AND ( FilingEntity.entity_id = FilingOtherManagers.manager_entity_id )
-                            '''
-        self.cursor.execute(sql, {'acc_num_1': acc_num, 'cusip_var': str(cusip)})
+        sql = '''SELECT
+                    name_of_issuer, title_of_class 
+                 FROM 
+                    Security
+                 WHERE
+                    (Security.cusip = %(cusip_var)s)'''
+
+        #  SELECT
+        #                         Security.name_of_issuer, Security.title_of_class
+        #                     FROM
+        #                         InfoTable13FData, InfoTable13F, Security, Filing, FilingEntity, FilingOtherManagers
+        #                     WHERE
+        #                         (InfoTable13FData.infotable_id = InfoTable13F.infotable_id)
+        #                     AND (InfoTable13F.infotable_id = Filing.filing_id)
+        #                     AND (Filing.accession_number =  %(acc_num_1)s)
+        #                     AND ( Security.cusip = %(cusip_var)s )
+        #                     AND ( Security.cusip = InfoTable13FData.cusip )
+        #                     '''
+        # if is_other_managers:
+        #     sql = sql + '\nAND ( FilingEntity.entity_id = FilingOtherManagers.manager_entity_id )'
+
+        # (
+        #     SELECT
+        #     InfoTable13F.infotable_id
+        #     FROM
+        #     InfoTable13F
+        #     WHERE
+        #     InfoTable13F.filing_id =( SELECT
+        #     Filing.filing_id
+        #     FROM
+        #     Filing
+        #     WHERE
+        #     (Filing.accession_number = % (acc_num_1)
+        # s )
+        # )
+        # )
+        # )
+        self.cursor.execute(sql, { 'cusip_var': str(cusip)})
         return self.cursor.fetchone()
 
     def getPositionDetails(self, cusip, acc_num, put_call_long, other_manager):
@@ -468,6 +486,7 @@ class EdgarDatabase:
                 return True
 
     def insertFilingEntity(self, data):
+        print(f'insert filing entity---------------------{data}')
         sql = ''' INSERT INTO FilingEntity(
                     entity_name, cik, irs_number, state_of_incorperation)
                     VALUES (  %(entity_name)s,  %(cik)s,  %(irs_number)s,  %(state_of_incorperation)s);  '''
@@ -555,6 +574,7 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'entity_id': entity_id, 'former_name': data[0], 'date_name_changed': data[1]})
 
     def insertFilingOtherManagers(self, data):
+        print(f'inserting filing other managers with :  {data} ')
         sql = ''' INSERT INTO FilingOtherManagers(
                     filing_id, manager_entity_id, sequence_number)
                     VALUES ( %(filing_id)s,   %(manager_entity_id)s, %(sequence_number)s)   '''
@@ -564,6 +584,8 @@ class EdgarDatabase:
         sql = '''INSERT INTO FilingSignatureBlock(
                     filing_id, name_of_signer, title_of_signer, phone_number, signature, city, state_or_county, signature_date)
                     VALUES ( %(filing_id)s,   %(name_of_signer)s,   %(title_of_signer)s,   %(phone_number)s,   %(signature)s,   %(city)s,   %(state_or_county)s,   %(signature_date)s) '''
+        print('sig data')
+        print(data)
         self.cursor.execute(sql, {'filing_id': filing_id, 'name_of_signer': data[0], 'title_of_signer': data[1],
                                   'phone_number': data[2], 'signature': data[3], 'city': data[4],
                                   'state_or_county': data[5], 'signature_date': data[6]})
@@ -572,9 +594,9 @@ class EdgarDatabase:
         statements = []
         statements.append('''CREATE TABLE IF NOT EXISTS FilingEntity(
                                             entity_id INT NOT NULL AUTO_INCREMENT,
-                                            entity_name VARCHAR(40)   NOT NULL,
-                                            cik VARCHAR(10)   NOT NULL,
-                                            irs_number VARCHAR(10),
+                                            entity_name VARCHAR(80)   NOT NULL,
+                                            cik VARCHAR(20)   NOT NULL,
+                                            irs_number VARCHAR(20),
                                             state_of_incorperation VARCHAR(5),
                                             PRIMARY KEY (entity_id)
                                             )''')
@@ -638,7 +660,7 @@ class EdgarDatabase:
                                                 city VARCHAR(40)   NOT NULL,
                                                 state VARCHAR(2)   NOT NULL,
                                                 zip VARCHAR(10)   NOT NULL,
-                                                business_phone_number VARCHAR(12)   NOT NULL,
+                                                business_phone_number VARCHAR(40)   NOT NULL,
                                                 PRIMARY KEY (business_address_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id) 
                                             )''')
@@ -677,11 +699,11 @@ class EdgarDatabase:
                                             (
                                                 signature_block_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_id INT NOT NULL,
-                                                name_of_signer VARCHAR(40)   NOT NULL,
-                                                title_of_signer VARCHAR(40)   NOT NULL,
-                                                phone_number VARCHAR(12)   NOT NULL,
-                                                signature VARCHAR(40)   NOT NULL,
-                                                city VARCHAR(40)   NOT NULL,
+                                                name_of_signer VARCHAR(100)   NOT NULL,
+                                                title_of_signer VARCHAR(100)   NOT NULL,
+                                                phone_number VARCHAR(20)   NOT NULL,
+                                                signature VARCHAR(100)   NOT NULL,
+                                                city VARCHAR(100)   NOT NULL,
                                                 state_or_county VARCHAR(6)   NOT NULL,
                                                 signature_date date NOT NULL,
                                                 PRIMARY KEY (signature_block_id),

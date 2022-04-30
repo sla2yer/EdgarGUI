@@ -34,6 +34,7 @@ class FilingViewerHandler:
         self.result_lines_19 = []
         self.result_lines_20 = []
 
+
     # If the handler does not have result lines stored in it this function will generate them
     # OTHERWISE this function will simply return the lines from the page given in the parameters
     # parameters = {from date':self.cbox_date_from.get(),  'until date':self.cbox_date_until.get(), 'next page':(-1),  'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page'50}
@@ -92,14 +93,6 @@ class FilingViewerHandler:
             self.result_lines[0].extend(self.result_lines_20)
             self.result_lines[0] = list(self.chunks(self.result_lines[0], parameters['res per page']))
             self.sortResults('All', 'alphabetical', False, parameters['res per page'])
-            print(len(self.result_lines))
-            print(len(self.result_lines[0]))
-            print(len(self.result_lines[0][0]))
-            print(len(self.result_lines[0][0][0]))
-            # print(self.result_lines[0][0][0])
-            # for i in range(30):
-            #     if len(self.result_lines[0][i]) < 5:
-            #         self.result_lines.pop(i)
 
         return self.result_lines[0][parameters['page']]
 
@@ -247,9 +240,12 @@ class FilingViewerHandler:
             name_and_title = db.getNameAndTitleOfSecurity(cusip, acc_num_from)
             if name_and_title is None:
                 name_and_title = db.getNameAndTitleOfSecurity(cusip, acc_num_until)
-
+            if name_and_title is None:
+                print(f"ERROR: name_and_title is None\ncusip: {cusip}\nacc_f: {acc_num_from}\nacc_u: {acc_num_until}")
             other_managers = []
-            if 'set' in str(other_managers1):
+            if 'set' in str(other_managers1) and 'set' in str(other_managers2):
+                other_managers.append('None')
+            elif 'set' in str(other_managers1):
                 other_managers2.update(set(other_managers1))
                 for i in other_managers2:
                     other_managers.append(i[0])
@@ -258,16 +254,12 @@ class FilingViewerHandler:
                 for i in other_managers1:
                     other_managers.append(i[0])
 
-            # print("ot 1 \n" + str(other_managers1) + "\not 2\n" + str(other_managers2) + "\not\n" + str(other_managers))
             del other_managers1
             del other_managers2
-            # if 'None' not in other_managers:
-            #     other_managers.append('None')
+
             pos_lines = []
             formatted_name = self.formatName(name_and_title[0])
             ftitle = self.formatTitle(name_and_title[1])
-            # if '-10' in threading.currentThread().getName():
-            #     print("thread 10 formatting position name and title")
 
             for ot in other_managers:
                 # pos_lines.append(self.formatLine('Put ', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Put', cusip, ot)))
@@ -286,9 +278,11 @@ class FilingViewerHandler:
                     pos_lines.append(res)
 
             db.close()
-            # if '-10' in threading.currentThread().getName():
-            #     print("thread 10 done with the line for " + str(cusip))
-
+            if '-10' in threading.currentThread().getName():
+                print("thread 10 done with the line for " + str(cusip))
+                ss = '------------------------------pos lines----------------'
+                ss = ss + '\n' + str(pos_lines)
+                print(ss)
         return pos_lines
 
     def formatLine(self, pos, name, title, ot, db, acc_num_from, acc_num_until, cusip):
@@ -402,9 +396,9 @@ class FilingViewerHandler:
                         'Entitry name:\t\t{name}\n' \
                         'CIK:\t\t\t{cik}\n' \
                         'State of incorperation:\t{state_inc}\n' \
-                        'Business Address: {b_addy1},  {b_addy2}, {b_addy3}, {b_addy4}\n' \
+                        'Business Address:\t\t{b_addy1},  {b_addy2}, {b_addy3}, {b_addy4}\n' \
                         'Business phone number:\t{b_phone}\n' \
-                        'Mailing Address:\t{m_addy1},  {m_addy2}, {m_addy3}, {m_addy4}\n' \
+                        'Mailing Address:\t\t{m_addy1},  {m_addy2}, {m_addy3}, {m_addy4}\n' \
                         'Filing signed off by:\t{sign_1}, {sign_2}\n' \
                         'Phone number:\t\t{p_num}\n' \
                         'Signed in:\t\t{sign_loc_1}, {sign_loc_2}\n' \
@@ -425,6 +419,9 @@ class FilingViewerHandler:
             detail_string = detail_string + '\n\nFormer name:\t\tNone'
             detail_string = detail_string + '\nDate of name change:\tNone'
         return detail_string
+
+    def getNumberOfPages(self):
+        return len(self.result_lines[0]) - 1
 
     def getPageNumberString(self):
         # if next page is -1 then page is 0

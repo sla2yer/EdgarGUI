@@ -1,7 +1,7 @@
 
 import tkinter as tk
 from functools import partial
-
+import quandl
 from Edgar_filingviewer_handler import FilingViewerHandler
 
 
@@ -9,7 +9,7 @@ class FilingViewer:
     def __init__(self,  filings,  root_parent):
         self.root = root_parent
         
-        tk.Grid.rowconfigure(self.root,  5,  weight=1)
+        tk.Grid.rowconfigure(self.root,  6,  weight=1)
         self.handler = FilingViewerHandler(filings)
         self.stringvar_sortby = tk.StringVar(self.root)
         self.cbox_sortby = tk.ttk.Combobox(self.root, textvariable=self.stringvar_sortby)
@@ -69,40 +69,45 @@ class FilingViewer:
         self.cbox_pcl.grid(row=4,  column=5)
         self.cbox_sortby.grid(row=4,  column=6)
         self.cbox_asc_desc.grid(row=4,  column=7)
-        
+
+        self.label_results_header = tk.Label(self.root, text="\t\tname of issuer\t\t              | \tclass title\t|\tvalue\t\t|\tshrs/ prn amount\t| p/c/l\t|\tOther Manager")
+        self.label_results_header.grid(row=5,  column=0, columnspan=8, sticky='w')
+
         self.label_other_managers = tk.Label(self.root,  text="check to only show holding for the selected manager")
         self.label_other_managers.grid(row=1,  column=6,  columnspan=2)
         self.bool_other_manager = tk.IntVar()
         self.checkbutton_other_managager = tk.Checkbutton(self.root,  text="",  variable=self.bool_other_manager,  onvalue=1,  offvalue=0,  command=self.otherManagerCheckActions)
-        self.checkbutton_other_managager.grid(row=2,  column=6,sticky="e")
+        self.checkbutton_other_managager.grid(row=2,  column=6, sticky="e")
         self.cbox_other_managers = tk.ttk.Combobox(self.root, textvariable=tk.StringVar(self.root))
         self.cbox_other_managers['values'] = ["Other manager 1", "Other manager 2"]
         self.cbox_other_managers['state'] = 'readonly'
         self.cbox_other_managers.current(0)
         self.cbox_other_managers.grid(row=2,  column=7)
+
+
         lbox_font = ("courier",  9)
         self.list_box_results = tk.Listbox(self.root, font=lbox_font, width=90,  exportselection=False,  selectmode=tk.MULTIPLE)
-        self.list_box_results.grid(row=5, column=0, columnspan=8,  sticky="nsew")
-        self.list_box_results.insert(0, self.handler.generateResultHeader())
+        self.list_box_results.grid(row=6, column=0, columnspan=8,  sticky="nsew")
+        # self.list_box_results.insert(0, self.handler.generateResultHeader())
         
         for result in self.handler.getResults( {'page': 0, 'start date': self.cbox_date_from.get(),  'end date': self.cbox_date_until.get(), 'asc or desc':self.cbox_asc_desc.get(),  'sort by':self.cbox_sortby.get(),   'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page':50 } ):
             self.list_box_results.insert(tk.END, result)
-        
-        
+
+
         self.button_back_res_page = tk.Button(self.root,  text="back",  command=self.backButtonActions)
-        self.button_back_res_page.grid(row=6,  column=2)
+        self.button_back_res_page.grid(row=7,  column=2)
         
         self.button_next_res_page = tk.Button(self.root,  text="next",  command=self.nextButtonActions)
-        self.button_next_res_page.grid(row=6,  column=6)
+        self.button_next_res_page.grid(row=7,  column=6)
         #-----------------------------GET THE NUMBER OF PAGES IN THE HANDLER-----------------------
         #-------------------------ACTUALLY JUST MAKE A METHOD THAT RETURNS THE RES PAGE NUMBER STRING------------
         #action_with_arg = partial(self.hander.getPageNumberString,  root)
         self.label_res_page_1 = tk.Label(self.root,  text="Page")
-        self.label_res_page_1.grid(row=6, column=3, sticky=tk.E)
-        
+        self.label_res_page_1.grid(row=7, column=3, sticky=tk.E)
+
         self.stringVar_res_page = tk.StringVar(self.root)
         self.entry_res_page = tk.Entry(self.root,  width=4,  textvariable=self.stringVar_res_page)
-        self.entry_res_page.grid(row=6, column=4)
+        self.entry_res_page.grid(row=7, column=4)
         self.stringVar_res_page.set("1")
         # ----------the method for the page number string is needed  to be used for all page changes as itll grab the search parameteres each time-----------------------------------------
         # -----------it does not need to return the page number, just the number of pages and results.---------------------------------------------------------------------------------
@@ -110,16 +115,17 @@ class FilingViewer:
         # -----------------------------still need to add the other manager and if the box is checked------------------
         value_dict = {'from date': self.cbox_date_from.get(),  'until date': self.cbox_date_until.get(), 'next page':(-1),  'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page':50}
         self.label_res_page_2 = tk.Label(self.root,  text=self.handler.getPageNumberString())
-        self.label_res_page_2.grid(row=6,  column=5, sticky=tk.W)
+        self.label_res_page_2.grid(row=7,  column=5, sticky=tk.W)
         
         # self.root.grab_set()
     
     def nextButtonActions(self):
         pagenum = int(self.stringVar_res_page.get()) + 1
-        self.stringVar_res_page.set(str(pagenum))
-        self.list_box_results.delete(1, tk.END)
-        for result in self.handler.getResults({'page': pagenum}):
-            self.list_box_results.insert(tk.END, result)
+        if - 1 < pagenum < self.handler.getNumberOfPages() + 1:
+            self.stringVar_res_page.set(str(pagenum))
+            self.list_box_results.delete(0, tk.END)
+            for result in self.handler.getResults({'page': pagenum}):
+                self.list_box_results.insert(tk.END, result)
         return
 
     def sortButtonActions(self):
@@ -128,10 +134,11 @@ class FilingViewer:
     
     def backButtonActions(self):
         pagenum = int(self.stringVar_res_page.get()) - 1
-        self.stringVar_res_page.set(str(pagenum))
-        self.list_box_results.delete(1, tk.END)
-        for result in self.handler.getResults({'page': pagenum}):
-            self.list_box_results.insert(tk.END, result)
+        if - 1 < pagenum < self.handler.getNumberOfPages():
+            self.stringVar_res_page.set(str(pagenum))
+            self.list_box_results.delete(0, tk.END)
+            for result in self.handler.getResults({'page': pagenum}):
+                self.list_box_results.insert(tk.END, result)
         return
     
     def otherManagerCheckActions(self):

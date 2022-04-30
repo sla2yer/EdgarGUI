@@ -4,25 +4,13 @@ from secedgar.exceptions import EDGARQueryError
 from datetime import date
 import warnings
 import platform
-# my_filings = Filing(cik_lookup=['SUSQUEHANNA INTERNATIONAL GROUP, LLP'],
-#                     filing_type=FilingType.FILING_13F,
-#                     count=15,
-#                     user_agent='YOUR COMPANY NAME HERE')
-#lookups = CIKLookup(['SUSQUEHANNA INTERNATIONAL GROUP'])
-#print(len(my_filings))
-#print(my_filings)
-#urls = my_filings.get_urls()
-#print(urls['SUSQUEHANNA INTERNATIONAL GROUP, LLP'])
-#print(lookups.tex)
-#my_filings.save('/home/pi/EdgarAppTempFolders')
-
 #in the 13f-HR/A document each of the holdings is wraped by <infoTable> and starts with <nameOfIssuer>
 
 class EdgarDownloader:
     def __init__(self):
         self.user_agent = 'jr'
         self.file_system = platform.system()
-        
+
     def searchForInstitute(self, institute, filing_type, start_date, end_date):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
         with warnings.catch_warnings(record=True) as w:
             print("searching with " + institute)

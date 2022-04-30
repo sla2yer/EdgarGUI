@@ -6,9 +6,10 @@ from GUI_handler import GUI_handler
 from functools import partial
 import threading
 
-
+# BNP Paribas Asset Management Holding
 # susquehanna international group, LLP
 # Citadel Investment Advisory, Inc.
+# Melvin Capital Management LP
 class SecGUI:
     def __init__(self, root):
         self.windowThreads = []
