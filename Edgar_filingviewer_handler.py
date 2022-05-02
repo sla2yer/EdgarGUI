@@ -258,7 +258,10 @@ class FilingViewerHandler:
             del other_managers2
 
             pos_lines = []
-            formatted_name = self.formatName(name_and_title[0])
+            if 'CDATA' in name_and_title[0]:
+                formatted_name = self.formatName(name_and_title[0][9:-3])
+            else:
+                formatted_name = self.formatName(name_and_title[0])
             ftitle = self.formatTitle(name_and_title[1])
 
             for ot in other_managers:
@@ -491,7 +494,6 @@ class FilingViewerHandler:
         return temp
 
     def generateResultHeader(self):
-
         header = self.formatName("name of issuer") + self.formatTitle("class title") + "    value          |  shrs/ prn amount  | p/c/l | Other Manager"
         return header
 
