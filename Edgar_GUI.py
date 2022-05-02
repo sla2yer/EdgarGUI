@@ -2,6 +2,8 @@ import tkinter as tk
 import tkcalendar
 import warnings
 from secedgar.filings import FilingType
+from tqdm import asyncio
+import asyncio
 from GUI_handler import GUI_handler
 from functools import partial
 import threading
@@ -196,6 +198,17 @@ class SecGUI:
         return flist
 
     def searchButtonAction(self):
+
+        t = threading.Thread(target=self.threadSearchButtonAction)
+        t.start()
+        # t.join()
+
+
+
+        return
+
+    def threadSearchButtonAction(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
         # dates are passed to the handler as datetime objects, the heandler then converts them to integers for the edgar search
         if self.checkbox_start_variable.get():
             start_date = str(self.calander_start.get_date())
