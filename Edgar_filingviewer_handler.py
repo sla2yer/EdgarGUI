@@ -2,7 +2,6 @@ from Edgar_database import EdgarDatabase
 from datetime import datetime
 from decimal import *
 import threading
-from threading import Lock
 import re
 
 
@@ -44,10 +43,6 @@ class FilingViewerHandler:
         if (len(self.result_lines[0]) == 0):
             # get the indexes of the dates from the self.filings list to be able to send the accession numbers
             date_indexs = self.getFilingListIndexs(parameters['start date'], parameters['end date'])
-            print("date indexes " + str(date_indexs))
-            print(str(self.filings))
-            print("start date: " + str(self.filings[date_indexs[0]][2]) + "end date: " + str(
-                self.filings[date_indexs[1]][2]))
             # this will give the cusips (whether its in either one), order here is irrelevant as the results will be sorted
             with EdgarDatabase(False) as db:
                 db.manualConnect()
@@ -62,16 +57,13 @@ class FilingViewerHandler:
             chuncked_cusips = list(self.chunks(list(cusips_both_filings), int((num_cusips / 15) + 1)))
 
             threads = []
-
             for i in range(len(chuncked_cusips)):
                 threads.append(
                     threading.Thread(target=self.generateResultLines, args=(chuncked_cusips[i], date_indexs)))
                 threads[i].start()
-            # self.generateResultLines(chuncked_cusips[0], date_indexs)
             for thread in threads:
                 thread.join()
             self.result_lines[0].extend(self.result_lines_1)
-            # print(self.result_lines[0][0])
             self.result_lines[0].extend(self.result_lines_2)
             self.result_lines[0].extend(self.result_lines_3)
             self.result_lines[0].extend(self.result_lines_4)
@@ -94,7 +86,7 @@ class FilingViewerHandler:
             self.result_lines[0] = list(self.chunks(self.result_lines[0], parameters['res per page']))
             self.sortResults('All', 'alphabetical', False, parameters['res per page'])
 
-        return self.result_lines[0][parameters['page']]
+        return self.result_lines[0][parameters['page']-1]
 
     def chunks(self, lst, n):
         for i in range(0, len(lst), n):
@@ -123,16 +115,10 @@ class FilingViewerHandler:
         del self.result_lines_20
 
     def generateResultLines(self, cusips_both_filings, date_indexs):
-        num_cusips = len(cusips_both_filings)
-        start_string = 'gen res line cusips. thread:' + str(
-            threading.currentThread().getName()) + ', num cusips: ' + str(num_cusips)
-        print(start_string)
         x = 1
         for cusip in cusips_both_filings:
             if (x % 20) == 0 and '-10' in threading.currentThread().getName():
-                s = str(cusip[0]) + ', ' + str(x) + '/ ' + str(num_cusips) + "  Thread: " + str(
-                    threading.currentThread().getName())
-                print(s)
+                print(str(x))
             if '-1' in str(threading.currentThread().getName()):
                 self.result_lines_1.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
                                                                       self.filings[date_indexs[1]][0]))
@@ -209,7 +195,6 @@ class FilingViewerHandler:
                 from_index = f
             if until_date in self.filings[f][2]:
                 until_index = f
-        print(str([from_index, until_index]))
         return [from_index, until_index]
 
     def generatePositionLines(self, cusip, acc_num_from, acc_num_until):
@@ -233,7 +218,6 @@ class FilingViewerHandler:
         #     print("thread 10 generating position line")
         with EdgarDatabase(False) as db:
             db.manualConnect()
-            #   other_managers = list(set(db.checkForOtherManagerSeqNums(acc_num_from, cusip)).union(set(db.checkForOtherManagerSeqNums(acc_num_until, cusip))))
             other_managers1 = set(db.checkForOtherManagerSeqNums(acc_num_from, cusip))
             other_managers2 = set(db.checkForOtherManagerSeqNums(acc_num_until, cusip))
 
@@ -265,9 +249,6 @@ class FilingViewerHandler:
             ftitle = self.formatTitle(name_and_title[1])
 
             for ot in other_managers:
-                # pos_lines.append(self.formatLine('Put ', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Put', cusip, ot)))
-                # pos_lines.append(self.formatLine('Call', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Call', cusip, ot)))
-                # pos_lines.append(self.formatLine('Long', formatted_name, ftitle, ot, db.getSummedValuesForPosition(acc_num_from, acc_num_until, 'Long', cusip, ot)))
                 res = self.formatLine('Put ', formatted_name, ftitle, ot, db, acc_num_from, acc_num_until, cusip)
                 if res is not None:
                     pos_lines.append(res)
@@ -281,11 +262,6 @@ class FilingViewerHandler:
                     pos_lines.append(res)
 
             db.close()
-            if '-10' in threading.currentThread().getName():
-                print("thread 10 done with the line for " + str(cusip))
-                ss = '------------------------------pos lines----------------'
-                ss = ss + '\n' + str(pos_lines)
-                print(ss)
         return pos_lines
 
     def formatLine(self, pos, name, title, ot, db, acc_num_from, acc_num_until, cusip):
@@ -314,15 +290,47 @@ class FilingViewerHandler:
         if summed_pos_shprin_from is None:
             summed_pos_shprin_from = 0
 
-        position_string = name + title + self.formatSummedValue(summed_pos_value_until, self.getPercentChange(summed_pos_value_until, summed_pos_value_from)) + \
-                          self.formatSummedValue(summed_pos_shprin_until, self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from)) + \
+        position_string = name + title + self.formatSummedValue(summed_pos_value_until, self.getPercentChange(summed_pos_value_until, summed_pos_value_from), True) + \
+                          self.formatSummedValue(summed_pos_shprin_until, self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from), False) + \
                           pos + "  | " + str(ot)
         return position_string
 
-    def formatSummedValue(self, summed_value, percent_change ):
-        ts = str(summed_value) + " (" + percent_change + "%)"
-        if len(ts) < 20:
-            for i in range(20 - len(ts)):
+    def formatSummedValue(self, summed_value, percent_change, is_value ):
+        number_string = str(summed_value)
+        num_front_characters = len(number_string)%3
+        range_var = int((len(number_string)/3)) - 1
+        if len(number_string) > 3 and range_var == 0:
+            range_var = 1
+        #58,745
+        if len(number_string) < 4:
+            if summed_value == 0:
+                new_string = number_string
+            else:
+                new_string = number_string + ",000"
+        else:
+            if num_front_characters == 0:
+                if range_var > 1:
+                    for x in range(range_var):
+                        if x < range_var - 1:
+                            new_string = number_string[(x*3):(x*3)+3]+','+ number_string[((x + 1)):((x + 1) * 3) + 3]
+                        else:
+                            new_string = number_string[(x * 3):(x * 3) + 3]
+                else:
+                    new_string = number_string[(0 * 3):(0 * 3) + 3] + ',' + number_string[(1 * 3):(1 * 3) + 3]
+
+            else:
+                new_string = number_string[0:num_front_characters] + ','
+                for x in range(range_var):
+                    if x < range_var - 1:
+                        new_string = new_string + number_string[((x+num_front_characters) * 3):((x+num_front_characters) * 3) + 3] + ',' + number_string[((x+num_front_characters) + 1):(((x+num_front_characters) + 1) * 3) + 3]
+                    else:
+                        new_string = new_string + number_string[((x+num_front_characters) * 3):((x+num_front_characters) * 3) + 3]
+
+        if is_value:
+            new_string = '$' + new_string + ',000'
+        ts = new_string + " (" + percent_change + "%)"
+        if len(ts) < 25:
+            for i in range(25 - len(ts)):
                 ts = ts + ' '
         return ts + '|'
 
@@ -424,7 +432,7 @@ class FilingViewerHandler:
         return detail_string
 
     def getNumberOfPages(self):
-        return len(self.result_lines[0]) - 1
+        return len(self.result_lines[0])
 
     def getPageNumberString(self):
         # if next page is -1 then page is 0
@@ -439,14 +447,11 @@ class FilingViewerHandler:
         # else the values variable will contain ['cstring' : current_string, 'page_num':page_num]
 
     def sortResults(self, pcla, sort_by, is_desc, res_per_page):
-        print('sorting')
-        print(sort_by)
         unchunked = []
         if len(self.result_lines) > 1:
             unchunked.extend(self.result_lines[1])
         for page in self.result_lines[0]:
             unchunked.extend(page)
-        # "alphabetical", "shrs/prn amount",  "shrs/prn change", "value", "value change"
 
         if 'alpha' in sort_by:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc)
@@ -459,7 +464,6 @@ class FilingViewerHandler:
         elif 'value change' in sort_by:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[2].split('(')[1].split('%')[0]))
         elif 'value' in sort_by:
-            print('sorting value')
             self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[2].split('(')[0].strip()))
 
         del unchunked
@@ -477,8 +481,6 @@ class FilingViewerHandler:
             for x in range(len(self.filings)):
                 if str(date) in self.filings[x][2]:
                     temp.append(self.filings[x])
-        print("sorted dates")
-        print(str(temp))
         self.filings = temp
 
     def getFilingAscNumbers(self):
@@ -499,9 +501,6 @@ class FilingViewerHandler:
 
     def parseDetails(self, filings):
         details = []
-        print(filings)
         for f in filings:
-            print(f)
             details.append(f.split(" | "))
-        print(details)
         return details

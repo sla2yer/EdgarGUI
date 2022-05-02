@@ -1,7 +1,4 @@
-
 import tkinter as tk
-from functools import partial
-import quandl
 from Edgar_filingviewer_handler import FilingViewerHandler
 
 
@@ -90,7 +87,7 @@ class FilingViewer:
         self.list_box_results.grid(row=6, column=0, columnspan=8,  sticky="nsew")
         # self.list_box_results.insert(0, self.handler.generateResultHeader())
         
-        for result in self.handler.getResults( {'page': 0, 'start date': self.cbox_date_from.get(),  'end date': self.cbox_date_until.get(), 'asc or desc':self.cbox_asc_desc.get(),  'sort by':self.cbox_sortby.get(),   'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page':50 } ):
+        for result in self.handler.getResults( {'page': 1, 'start date': self.cbox_date_from.get(),  'end date': self.cbox_date_until.get(), 'asc or desc':self.cbox_asc_desc.get(),  'sort by':self.cbox_sortby.get(),   'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page':50 } ):
             self.list_box_results.insert(tk.END, result)
 
 
@@ -121,7 +118,7 @@ class FilingViewer:
     
     def nextButtonActions(self):
         pagenum = int(self.stringVar_res_page.get()) + 1
-        if - 1 < pagenum < self.handler.getNumberOfPages() + 1:
+        if 0 < pagenum <= self.handler.getNumberOfPages():
             self.stringVar_res_page.set(str(pagenum))
             self.list_box_results.delete(0, tk.END)
             for result in self.handler.getResults({'page': pagenum}):
@@ -134,7 +131,7 @@ class FilingViewer:
     
     def backButtonActions(self):
         pagenum = int(self.stringVar_res_page.get()) - 1
-        if - 1 < pagenum < self.handler.getNumberOfPages():
+        if 0 < pagenum <= self.handler.getNumberOfPages():
             self.stringVar_res_page.set(str(pagenum))
             self.list_box_results.delete(0, tk.END)
             for result in self.handler.getResults({'page': pagenum}):
