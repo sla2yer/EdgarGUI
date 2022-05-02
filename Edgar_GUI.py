@@ -26,6 +26,16 @@ class SecGUI:
         self.clicked = tk.StringVar(root)
         self.clicked.set(filings[5])
 
+        # ------------MENU BAR---------------------------------
+        self.menu_bar = tk.Menu(root, background='grey', foreground='black')
+
+        self.menu_file = tk.Menu(self.menu_bar,background='white', foreground='black', tearoff=1 )
+        self.menu_file.add_command(label='Set SEC ID')
+        self.menu_file.add_command(label='clear database')
+        self.menu_file.add_command(label='set temp file location')
+        self.menu_file.add_command(label="Exit")
+        self.menu_bar.add_cascade(label="File", menu=self.menu_file)
+        root.config(menu=self.menu_bar)
         # ----------FILING TYPE COMBO BOX------------------------------------
         self.combo_box = tk.ttk.Combobox(root, textvariable=self.clicked)
         self.combo_box['values'] = filings
@@ -67,14 +77,12 @@ class SecGUI:
         # -------------TRACKING LABELS, LIST, AND GRID PLACEMENT----------------------------------
         self.label_track_list_title = tk.Label(root, text="Institutions being tracked:")
 
-        # self.label_track_list_formated = tk.Label(root, text="None")
         self.list_to_track = []
 
         self.list_box_track = tk.Listbox(root, width=35, exportselection=False, selectmode=tk.MULTIPLE)
         self.list_box_track.grid(row=2, column=0, rowspan=3, sticky="nsew")
         self.list_box_track.insert(1, "None")
         self.label_track_list_title.grid(row=1, column=0)
-        # self.label_track_list_formated.grid(row = 2, column = 0)
 
         self.list_box_results = tk.Listbox(root, width=35, exportselection=False, selectmode=tk.MULTIPLE)
         self.list_box_results.grid(row=5, column=0, sticky="nsew")
