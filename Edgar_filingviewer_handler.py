@@ -5,6 +5,8 @@ import threading
 import re
 
 
+
+
 class FilingViewerHandler:
     def __init__(self, filings):
         self.filings = self.parseDetails(filings)
@@ -179,10 +181,6 @@ class FilingViewerHandler:
             elif '-20' in str(threading.currentThread().getName()):
                 self.result_lines_20.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
                                                                     self.filings[date_indexs[1]][0]))
-            # else testing
-            # else:
-            #     self.result_lines_1.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-            #                                                           self.filings[date_indexs[1]][0]))
 
             x = x + 1
 
@@ -210,12 +208,10 @@ class FilingViewerHandler:
         # for the given CUSIP do search for put, then call, then long positions
         # EXAMPLE first_sets[0] will be all put positions for the given CUSIP from acc_num_1
         # if there are no put positions them the length of first_sets[0] will be 0
-        # first_sets[0] = [put1, ... , putn] | n = len(first_sets[0])                                               (y tho)
+        # first_sets[0] = [put1, ... , putn] | n = len(first_sets[0])
         # first_sets[0][0] = [issuer name, title of class, value, shrs/prn amount, shrs or pr, put/long/call, filing entity name, sol_va, shared_va, none_va ]
         #                           0               1        2          3               4             5                 6              7      8          9
         # db = EdgarDatabase(False)
-        # if '-10' in threading.currentThread().getName():
-        #     print("thread 10 generating position line")
         with EdgarDatabase(False) as db:
             db.manualConnect()
             other_managers1 = set(db.checkForOtherManagerSeqNums(acc_num_from, cusip))
@@ -334,14 +330,14 @@ class FilingViewerHandler:
                 ts = ts + ' '
         return ts + '|'
 
-
     def formatTitle(self, title):
         if len(title) < 19:
-            for i in range(20-len(title)):
+            for i in range(20 - len(title)):
                 title = title + ' '
             return title + '|'
         else:
             return title + '|'
+
 
     def getPercentChange(self, second, first):
         if first is None or first == 0:
@@ -482,6 +478,22 @@ class FilingViewerHandler:
                 if str(date) in self.filings[x][2]:
                     temp.append(self.filings[x])
         self.filings = temp
+
+    def getOtherManagers(self, from_date, until_date):
+        with EdgarDatabase(False) as db:
+            db.manualConnect()
+            date_indexes = self.getFilingListIndexs(from_date=from_date, until_date=until_date)
+            names1 = set(db.checkForOtherManager(self.filings[date_indexes[0]][0]))
+            names2 = set(db.checkForOtherManager(self.filings[date_indexes[1]][0]))
+            if 'set' not in names2:
+                names2.update(names1)
+                return list(names2)
+            elif 'set' not in names1:
+                names1.update(names2)
+                return list(names1)
+            else:
+                return['None']
+
 
     def getFilingAscNumbers(self):
         temp = []

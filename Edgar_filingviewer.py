@@ -8,6 +8,7 @@ class FilingViewer:
         
         tk.Grid.rowconfigure(self.root,  6,  weight=1)
         self.handler = FilingViewerHandler(filings)
+
         self.stringvar_sortby = tk.StringVar(self.root)
         self.cbox_sortby = tk.ttk.Combobox(self.root, textvariable=self.stringvar_sortby)
         self.cbox_sortby['values'] = ["alphabetical", "shrs/prn amount",  "shrs/prn change", "value", "value change"]
@@ -76,7 +77,7 @@ class FilingViewer:
         self.checkbutton_other_managager = tk.Checkbutton(self.root,  text="",  variable=self.bool_other_manager,  onvalue=1,  offvalue=0,  command=self.otherManagerCheckActions)
         self.checkbutton_other_managager.grid(row=2,  column=6, sticky="e")
         self.cbox_other_managers = tk.ttk.Combobox(self.root, textvariable=tk.StringVar(self.root))
-        self.cbox_other_managers['values'] = ["Other manager 1", "Other manager 2"]
+        self.cbox_other_managers['values'] = self.handler.getOtherManagers(self.cbox_date_from.get(), self.cbox_date_until.get())
         self.cbox_other_managers['state'] = 'readonly'
         self.cbox_other_managers.current(0)
         self.cbox_other_managers.grid(row=2,  column=7)

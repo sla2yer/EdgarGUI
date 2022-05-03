@@ -84,7 +84,6 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'acc': acc, 'pcl': pcl, 'cusip': cusip, 'otm': otm})
         return self.cursor.fetchall()
 
-
     def getInfoTableID(self, filing_id):
         sql = "SELECT infotable_id FROM InfoTable13F WHERE filing_id = %(filing_id)s"
         self.cursor.execute(sql, {'filing_id': filing_id})
@@ -121,7 +120,8 @@ class EdgarDatabase:
             self.cursor.execute(sql, {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state})
         else:
             sql = ''' UPDATE FilingEntity SET cik = %(cik)s, irs_number =%(irs_number)s, state_of_incorperation = %(state)s WHERE entity_id=%(entity_id)s'''
-            self.cursor.execute(sql, {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state, 'cik': cik})
+            self.cursor.execute(sql,
+                                {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state, 'cik': cik})
 
     def isAccessionNumberInDatabase(self, number):
         sql = "SELECT accession_number FROM Filing WHERE accession_number = %(number)s"
@@ -244,27 +244,6 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
 
-    # SELECT
-    #                      InfoTable13FData.other_manager_sequence_numbers, InfoTable13FData.value
-    #                  FROM
-    #                      InfoTable13FData, FilingEntity, FilingOtherManagers, Filing
-    #                  WHERE
-    #                      (InfoTable13FData.infotable_id =(  SELECT
-    #                                                              InfoTable13F.infotable_id
-    #                                                          FROM
-    #                                                              InfoTable13F
-    #                                                          WHERE
-    #                                                              InfoTable13F.filing_id =(  SELECT
-    #                                                                                          Filing.filing_id
-    #                                                                                      FROM
-    #                                                                                          Filing
-    #                                                                                      WHERE
-    #                                                                                         Filing.accession_number = '0001-44-6194-22-000002'
-    #                                                                                     )
-    #                                                         )
-    #                     )
-    #                     AND
-    #                     (InfoTable13FData.cusip = '68243Q106');
     def checkForOtherManagerSeqNums(self, acc_num, cusip):
         sql = '''SELECT DISTINCT
                     InfoTable13FData.other_manager_sequence_numbers
@@ -283,25 +262,31 @@ class EdgarDatabase:
         return self.cursor.fetchall()
 
     def checkForOtherManager(self, acc_num):
-        sql = '''SELECT 
+
+        sql = '''
+        select  FilingEntity.entity_name 
+        from FilingEntity, FilingOtherManagers, Filing 
+        where (FilingOtherManagers.manager_entity_id = FilingEntity.entity_id) 
+        and (FilingOtherManagers.filing_id = Filing.filing_id) 
+        and (Filing.accession_number = %(acc_num)s);
+        
+        '''
+        sql2 = '''SELECT 
                     FilingEntity.entity_name 
                 FROM
                     FilingEntity, FilingOtherManagers, Filing
                 WHERE
+                
+                    
                     (FilingEntity.entity_id = FilingOtherManagers.manager_entity_id ) 
                     AND 
-                    (FilingOtherManagers.filing_id =  ( SELECT 
-                                                            Filing.filing_id
-                                                         FROM
-                                                            Filing
-                                                         WHERE
-                                                            (Filing.accession_number = %(acc_num)s)
-                                                        )
-                            )'''
+                    (FilingOtherManagers.filing_id =  Filing.filing_id)
+                    AND 
+                    (Filing.accession_number = %(acc_num)s)'''
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
 
-    def getPostionValueSum(self, cusip, acc_num, put_call_long, other_manager):
+    def getPositionValueSum(self, cusip, acc_num, put_call_long, other_manager):
         sql = ''' SELECT    
                                 SUM(InfoTable13FData.value)
                             FROM 
@@ -339,37 +324,7 @@ class EdgarDatabase:
                  WHERE
                     (Security.cusip = %(cusip_var)s)'''
 
-        #  SELECT
-        #                         Security.name_of_issuer, Security.title_of_class
-        #                     FROM
-        #                         InfoTable13FData, InfoTable13F, Security, Filing, FilingEntity, FilingOtherManagers
-        #                     WHERE
-        #                         (InfoTable13FData.infotable_id = InfoTable13F.infotable_id)
-        #                     AND (InfoTable13F.infotable_id = Filing.filing_id)
-        #                     AND (Filing.accession_number =  %(acc_num_1)s)
-        #                     AND ( Security.cusip = %(cusip_var)s )
-        #                     AND ( Security.cusip = InfoTable13FData.cusip )
-        #                     '''
-        # if is_other_managers:
-        #     sql = sql + '\nAND ( FilingEntity.entity_id = FilingOtherManagers.manager_entity_id )'
-
-        # (
-        #     SELECT
-        #     InfoTable13F.infotable_id
-        #     FROM
-        #     InfoTable13F
-        #     WHERE
-        #     InfoTable13F.filing_id =( SELECT
-        #     Filing.filing_id
-        #     FROM
-        #     Filing
-        #     WHERE
-        #     (Filing.accession_number = % (acc_num_1)
-        # s )
-        # )
-        # )
-        # )
-        self.cursor.execute(sql, { 'cusip_var': str(cusip)})
+        self.cursor.execute(sql, {'cusip_var': str(cusip)})
         return self.cursor.fetchone()
 
     def getPositionDetails(self, cusip, acc_num, put_call_long, other_manager):
@@ -726,5 +681,3 @@ class EdgarDatabase:
                     VALUES ( %(filing_entity_id)s,   %(filing_type)s,   %(last_file_date)s) '''
         self.cursor.execute(sql, {'filing_entity_id': filing_entity_id, 'filing_type': filing_type,
                                   'last_file_date': last_file_date})
-
-# end __init___
