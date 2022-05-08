@@ -119,7 +119,7 @@ class FilingViewerHandler:
     def generateResultLines(self, cusips_both_filings, date_indexs):
         x = 1
         for cusip in cusips_both_filings:
-            if (x % 20) == 0 and '-10' in threading.currentThread().getName():
+            if (x % 40) == 0 and '-10' in threading.currentThread().getName():
                 print(str(x))
             if '-1' in str(threading.currentThread().getName()):
                 self.result_lines_1.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
@@ -199,19 +199,6 @@ class FilingViewerHandler:
         # this method takes a single CUSIP and the gets the put, call, and long holdings from each accession number
         # the first accession number is the earlier holding and the second accession number is the more recent
 
-        # ---------------------INSTEAD OF WHATS HERE---------------------------------
-        # Search for any other managers on the given CUSIP as there could be several for any one postion or CUSIP
-        # then make the lines for each 'other manager' as postions that are for the same CUSIP but not for the same othermanager can not be summed
-
-        # print("Gen position lines ")
-
-        # for the given CUSIP do search for put, then call, then long positions
-        # EXAMPLE first_sets[0] will be all put positions for the given CUSIP from acc_num_1
-        # if there are no put positions them the length of first_sets[0] will be 0
-        # first_sets[0] = [put1, ... , putn] | n = len(first_sets[0])
-        # first_sets[0][0] = [issuer name, title of class, value, shrs/prn amount, shrs or pr, put/long/call, filing entity name, sol_va, shared_va, none_va ]
-        #                           0               1        2          3               4             5                 6              7      8          9
-        # db = EdgarDatabase(False)
         with EdgarDatabase(False) as db:
             db.manualConnect()
             other_managers1 = set(db.checkForOtherManagerSeqNums(acc_num_from, cusip))
@@ -293,21 +280,20 @@ class FilingViewerHandler:
 
     def formatSummedValue(self, summed_value, percent_change, is_value ):
         number_string = str(summed_value)
+        new_string = '0'
         num_front_characters = len(number_string)%3
-        range_var = int((len(number_string)/3)) - 1
-        if len(number_string) > 3 and range_var == 0:
-            range_var = 1
+        num_of_commas = int((len(number_string)/3)) - 1
+        if len(number_string) > 3 and num_of_commas == 0:
+            num_of_commas = 1
         #58,745
         if len(number_string) < 4:
-            if summed_value == 0:
-                new_string = number_string
-            else:
-                new_string = number_string + ",000"
+            new_string = number_string
+
         else:
             if num_front_characters == 0:
-                if range_var > 1:
-                    for x in range(range_var):
-                        if x < range_var - 1:
+                if num_of_commas > 1:
+                    for x in range(num_of_commas):
+                        if x < num_of_commas - 1:
                             new_string = number_string[(x*3):(x*3)+3]+','+ number_string[((x + 1)):((x + 1) * 3) + 3]
                         else:
                             new_string = number_string[(x * 3):(x * 3) + 3]
@@ -316,11 +302,11 @@ class FilingViewerHandler:
 
             else:
                 new_string = number_string[0:num_front_characters] + ','
-                for x in range(range_var):
-                    if x < range_var - 1:
-                        new_string = new_string + number_string[((x+num_front_characters) * 3):((x+num_front_characters) * 3) + 3] + ',' + number_string[((x+num_front_characters) + 1):(((x+num_front_characters) + 1) * 3) + 3]
+                for x in range(num_of_commas):
+                    if x < num_of_commas - 1:
+                        new_string = new_string + number_string[((x * 3)+num_front_characters):((x * 3)+num_front_characters) + 3] + ',' + number_string[(((x+1) * 3)+num_front_characters):((x+1)*3+num_front_characters)]
                     else:
-                        new_string = new_string + number_string[((x+num_front_characters) * 3):((x+num_front_characters) * 3) + 3]
+                        new_string = new_string + number_string[((x * 3)+num_front_characters):((x * 3)+num_front_characters) + 3]
 
         if is_value:
             new_string = '$' + new_string + ',000'
@@ -453,14 +439,14 @@ class FilingViewerHandler:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc)
 
         elif 'shrs/prn amount' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[3].split('(')[0].strip()))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(''.join(x.split('|')[3].split('(')[0].strip().split(','))))
 
         elif 'shrs/prn change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[3].split('(')[1].split('%')[0]))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(''.join(x.split('|')[3].split('(')[1].split('%')[0].split(','))))
         elif 'value change' in sort_by:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[2].split('(')[1].split('%')[0]))
         elif 'value' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(x.split('|')[2].split('(')[0].strip()))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(''.join(x.split('|')[2].split('(')[0].strip().split('$')[1].split(','))))
 
         del unchunked
         if 'All' not in pcla:
@@ -485,10 +471,10 @@ class FilingViewerHandler:
             date_indexes = self.getFilingListIndexs(from_date=from_date, until_date=until_date)
             names1 = set(db.checkForOtherManager(self.filings[date_indexes[0]][0]))
             names2 = set(db.checkForOtherManager(self.filings[date_indexes[1]][0]))
-            if 'set' not in names2:
+            if 'set' not in str(names2):
                 names2.update(names1)
                 return list(names2)
-            elif 'set' not in names1:
+            elif 'set' not in str(names1):
                 names1.update(names2)
                 return list(names1)
             else:

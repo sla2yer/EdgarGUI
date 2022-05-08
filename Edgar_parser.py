@@ -19,7 +19,6 @@ class Parser:
         db.insertFilingSignatureBlock(filing_id, parser.getFilingSignatureBlock(self.text[sig_start:sig_end]))
 
     def lookUpCik(self, name):
-        print(name)
         with CIKLookup(name) as cik_lookup:
             try:
                 cik_dic = cik_lookup.get_ciks()
@@ -29,15 +28,11 @@ class Parser:
 
     def parseFiling(self, db, entity):
         if '13F' in self.filing_type:
-            print(f"parse filing\nEntity: {entity}")
             parser = Parser_13f()
             filing_data = parser.getFilingInfo(self.text)
-            print(f'filing data:  {filing_data}')
             entity = filing_data[len(filing_data) - 1]
 
             index = self.text.find('otherManagersInfo')
-            # if ('inc' in entity.lower()) and ('inc.' not in entity.lower()):
-            #     entity = entity + '.' COMPANY CONFORMED NAME:
             entity_id = db.getEntityIDFromName(entity)
             # if index is > -1 then there are no positions reported on this filing
             if index > -1:
@@ -61,9 +56,7 @@ class Parser:
                 dlist = [filing_id, db.getEntityIDFromCIK(manager_strings[0]), 0]
                 db.insertFilingOtherManagers(dlist)
 
-
             else:
-                # print("else index = -1 Edgar_parser.parseFiling()")
                 # else this filing reports positions so check for other managers in this filing
                 db.insertFiling(entity_id, filing_data, False)
                 filing_id = db.getFilingID(filing_data[0])
@@ -82,7 +75,6 @@ class Parser:
                 db.insertInfoTable13F(filing_id, parser.getInfoTableInfo(self.text))
                 infotable_id = db.getInfoTableID(filing_id)
                 infotable_num_entries = db.getInfoTable13FTableEntryTotal(infotable_id)
-                print("Edgar_parser.parseFiling() 58 entering share issues to database")
                 # IF IT ISN'T INSERT IT
                 # THEN ONCE CONFIRMED IT IS IN THE DATA BASE THE SHAREISSUE CAN BE INSERTED
                 # THE CUSIP ACTS AS THE PRIMARY KEY SO THERE IS NO NEED TO QUERY FROM THE SECURITY TABLE HERE
@@ -124,7 +116,6 @@ class Parser:
                 db.insertEntityFormerName(entity_id, former_name_info)
             # do this just to pass a bit less uneccesarry data
             filing_data = parser.getFilingInfo(self.text)
-            print(f'acc_number: {filing_data[0]}')
             index = self.text.find('otherManagersInfo')
             if index > -1:
                 # get the filing manager info
@@ -135,7 +126,6 @@ class Parser:
                 filing_id = db.getFilingID(filing_data[0])
                 self.insertFilingSignature(db, filing_id, parser)
                 # before the manager is inserted a check has to be done to make sure it is in 'FilingEntity'
-                print(manager_strings)
                 if not db.isEntityInDatabase(manager_strings[3]):
                     # use the name and cik to insert into FilingEntity
                     list = [manager_strings[2], manager_strings[0], None, None]
@@ -156,12 +146,9 @@ class Parser:
                         if manager[1] is None:
                             manager[1] = self.lookUpCik(manager[3])
                         if not db.isEntityInDatabase(manager[3]):
-                            print("entering other manager ")
-                            print(manager)
                             # use the name and cik to insert into FilingEntity
                             list = [manager[3], manager[1], None, None]
                             db.insertFilingEntity(list)
-                            # insert()
                             # now that the reporting manager is in the FilingEntity table get the ID of the filing and the manager
                         dlist = [filing_id, db.getEntityIDFromCIK(manager[1]), manager[0]]
                         db.insertFilingOtherManagers(dlist)

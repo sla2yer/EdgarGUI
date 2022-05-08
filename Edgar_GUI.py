@@ -209,10 +209,6 @@ class SecGUI:
 
         t = threading.Thread(target=self.threadSearchButtonAction)
         t.start()
-        # t.join()
-
-
-
         return
 
     def threadSearchButtonAction(self):
@@ -227,8 +223,8 @@ class SecGUI:
         else:
             end_date = ""
 
-        # MAkE IT SO THIS RETURNS FALSE IF NO RESULTS ARE FOUND. 0 results because of diff file type gives a true result
-        # After the call a function from getReults if True is returned
+        # searchForFiling() returns false if no filings are found howver, 0 results because of diff file type gives a true result
+        # if True is returned, loop through getReultsMessage()
         print(self.filling_dict[self.combo_box.get()])
         self.list_box_results.delete(0, tk.END)
         box_index = 0
