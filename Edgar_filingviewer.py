@@ -1,4 +1,6 @@
 import tkinter as tk
+from functools import partial
+
 from Edgar_filingviewer_handler import FilingViewerHandler
 
 
@@ -128,6 +130,8 @@ class FilingViewer:
 
     def sortButtonActions(self):
         self.handler.sortResults(self.cbox_pcl.get(), self.stringvar_sortby.get(), 'desc' in self.cbox_asc_desc.get(), 50)
+        for result in self.handler.getResults({'page': int(self.stringVar_res_page.get())}):
+            self.list_box_results.insert(tk.END, result)
         return
     
     def backButtonActions(self):
@@ -148,5 +152,8 @@ class FilingViewer:
         i = i + 1
     
     def searchButtonActions(self):
-        i = 0
-        i = i +1
+        search_string = self.entry_search.get()
+        self.handler.searchFilingPositons(search_string, 50)
+        self.stringVar_res_page.set('1')
+        for result in self.handler.getResults({'page': 1}):
+            self.list_box_results.insert(tk.END, result)

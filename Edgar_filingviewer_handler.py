@@ -477,6 +477,27 @@ class FilingViewerHandler:
                     temp.append(self.filings[x])
         self.filings = temp
 
+
+    def searchFilingPositons(self, search_string, res_per_page ):
+        print('searching in handler: '+search_string)
+        temp = []
+        for page in self.result_lines[0]:
+            temp = temp + page
+        if len(self.result_lines) > 1:
+            print('res lines len > 1')
+            temp = temp + self.result_lines[1]
+        del self.result_lines
+        self.result_lines = [[],[]]
+        for position_line in temp:
+            if search_string in str(position_line).split('|')[0]:
+                self.result_lines[0].append(position_line)
+            else:
+                self.result_lines[1].append(position_line)
+        self.result_lines[0] = list(self.chunks(self.result_lines[0], res_per_page))
+
+
+
+
     def getOtherManagers(self, from_date, until_date):
         with EdgarDatabase(False) as db:
             db.manualConnect()
