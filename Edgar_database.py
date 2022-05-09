@@ -56,6 +56,23 @@ class EdgarDatabase:
             self.cursor.execute(statement)
         self.commit()
 
+    def getOtherManagerName(self, acc_num, ot_seq):
+        sql = '''SELECT
+                    DISTINCT fe.entity_name
+                FROM
+                    FilingEntity as fe, Filing, FilingOtherManagers as fom
+                WHERE 
+                    fe.entity_id = fom.manager_entity_id
+                AND 
+                    fom.filing_id = Filing.filing_id
+                AND
+                    fom.sequence_number = %(ot_seq)s
+                AND 
+                    Filing.accession_number = %(acc_num)s
+                    '''
+        self.cursor.execute(sql, {'acc_num': acc_num,  'ot_seq': ot_seq})
+        return self.cursor.fetchall()
+
     def getSummedValuesForPosition(self, acc, pcl, cusip, otm):
         sql = '''SELECT 
                     SUM(tf.value), SUM(tf.shares_principle_amount), SUM(tf.sole_voting_authority), SUM(tf.shared_voting_authority), SUM(tf.none_voting_authority)

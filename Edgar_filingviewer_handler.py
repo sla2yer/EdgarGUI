@@ -265,7 +265,10 @@ class FilingViewerHandler:
             return None
 
         if summed_pos_value_until is None:
+            ot_name = db.getOtherManagerName(acc_num=acc_num_from, ot_seq=ot)
             summed_pos_value_until = 0
+        else:
+            ot_name = db.getOtherManagerName(acc_num=acc_num_until, ot_seq=ot)
         if summed_pos_shprin_until is None:
             summed_pos_shprin_until = 0
         if summed_pos_value_from is None:
@@ -273,9 +276,18 @@ class FilingViewerHandler:
         if summed_pos_shprin_from is None:
             summed_pos_shprin_from = 0
 
+        temp_ot_name = ''
+        if len(ot_name) == 1:
+            if len(ot_name[0]) == 1:
+                temp_ot_name = str(ot_name[0][0])
+            elif len(ot_name[0]) > 1:
+                temp_ot_name = str(ot_name[0])
+            else:
+                temp_ot_name = str(ot_name)
+
         position_string = name + title + self.formatSummedValue(summed_pos_value_until, self.getPercentChange(summed_pos_value_until, summed_pos_value_from), True) + \
                           self.formatSummedValue(summed_pos_shprin_until, self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from), False) + \
-                          pos + "  | " + str(ot)
+                          pos + "  | " + temp_ot_name
         return position_string
 
     def formatSummedValue(self, summed_value, percent_change, is_value ):
