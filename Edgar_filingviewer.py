@@ -114,7 +114,9 @@ class FilingViewer:
         
         # -----------------------------still need to add the other manager and if the box is checked------------------
         value_dict = {'from date': self.cbox_date_from.get(),  'until date': self.cbox_date_until.get(), 'next page':(-1),  'other manager': self.cbox_other_managers.get(),  'bool only managers':self.bool_other_manager.get(),  'res per page':50}
-        self.label_res_page_2 = tk.Label(self.root,  text=self.handler.getPageNumberString())
+        self.stringVar_resPage_label = tk.StringVar(self.root)
+        self.label_res_page_2 = tk.Label(self.root,  textvariable=self.stringVar_resPage_label)
+        self.stringVar_resPage_label.set(self.handler.getPageNumberString())
         self.label_res_page_2.grid(row=7,  column=5, sticky=tk.W)
         
         # self.root.grab_set()
@@ -130,8 +132,10 @@ class FilingViewer:
 
     def sortButtonActions(self):
         self.handler.sortResults(self.cbox_pcl.get(), self.stringvar_sortby.get(), 'desc' in self.cbox_asc_desc.get(), 50)
+        self.list_box_results.delete(0, tk.END)
         for result in self.handler.getResults({'page': int(self.stringVar_res_page.get())}):
             self.list_box_results.insert(tk.END, result)
+        self.stringVar_resPage_label.set(self.handler.getPageNumberString())
         return
     
     def backButtonActions(self):
@@ -155,5 +159,6 @@ class FilingViewer:
         search_string = self.entry_search.get()
         self.handler.searchFilingPositons(search_string, 50)
         self.stringVar_res_page.set('1')
+        self.list_box_results.delete(0, tk.END)
         for result in self.handler.getResults({'page': 1}):
             self.list_box_results.insert(tk.END, result)

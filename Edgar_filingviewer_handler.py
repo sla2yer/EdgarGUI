@@ -5,8 +5,6 @@ import threading
 import re
 
 
-
-
 class FilingViewerHandler:
     def __init__(self, filings):
         self.filings = self.parseDetails(filings)
@@ -34,7 +32,6 @@ class FilingViewerHandler:
         self.result_lines_18 = []
         self.result_lines_19 = []
         self.result_lines_20 = []
-
 
     # If the handler does not have result lines stored in it this function will generate them
     # OTHERWISE this function will simply return the lines from the page given in the parameters
@@ -88,7 +85,7 @@ class FilingViewerHandler:
             self.result_lines[0] = list(self.chunks(self.result_lines[0], parameters['res per page']))
             self.sortResults('All', 'alphabetical', False, parameters['res per page'])
 
-        return self.result_lines[0][parameters['page']-1]
+        return self.result_lines[0][parameters['page'] - 1]
 
     def chunks(self, lst, n):
         for i in range(0, len(lst), n):
@@ -153,34 +150,34 @@ class FilingViewerHandler:
                                                                        self.filings[date_indexs[1]][0]))
             elif '-11' in str(threading.currentThread().getName()):
                 self.result_lines_11.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-12' in str(threading.currentThread().getName()):
                 self.result_lines_12.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-13' in str(threading.currentThread().getName()):
                 self.result_lines_13.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-14' in str(threading.currentThread().getName()):
                 self.result_lines_14.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-15' in str(threading.currentThread().getName()):
                 self.result_lines_15.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-16' in str(threading.currentThread().getName()):
                 self.result_lines_16.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-17' in str(threading.currentThread().getName()):
                 self.result_lines_17.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-18' in str(threading.currentThread().getName()):
                 self.result_lines_18.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-19' in str(threading.currentThread().getName()):
                 self.result_lines_19.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                      self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
             elif '-20' in str(threading.currentThread().getName()):
                 self.result_lines_20.extend(self.generatePositionLines(cusip[0], self.filings[date_indexs[0]][0],
-                                                                    self.filings[date_indexs[1]][0]))
+                                                                       self.filings[date_indexs[1]][0]))
 
             x = x + 1
 
@@ -285,19 +282,23 @@ class FilingViewerHandler:
             else:
                 temp_ot_name = str(ot_name)
 
-        position_string = name + title + self.formatSummedValue(summed_pos_value_until, self.getPercentChange(summed_pos_value_until, summed_pos_value_from), True) + \
-                          self.formatSummedValue(summed_pos_shprin_until, self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from), False) + \
+        position_string = name + title + self.formatSummedValue(summed_pos_value_until,
+                                                                self.getPercentChange(summed_pos_value_until,
+                                                                                      summed_pos_value_from), True) + \
+                          self.formatSummedValue(summed_pos_shprin_until,
+                                                 self.getPercentChange(summed_pos_shprin_until, summed_pos_shprin_from),
+                                                 False) + \
                           pos + "  | " + temp_ot_name
         return position_string
 
-    def formatSummedValue(self, summed_value, percent_change, is_value ):
+    def formatSummedValue(self, summed_value, percent_change, is_value):
         number_string = str(summed_value)
         new_string = '0'
-        num_front_characters = len(number_string)%3
-        num_of_commas = int((len(number_string)/3)) - 1
+        num_front_characters = len(number_string) % 3
+        num_of_commas = int((len(number_string) / 3)) - 1
         if len(number_string) > 3 and num_of_commas == 0:
             num_of_commas = 1
-        #58,745
+        # 58,745
         if len(number_string) < 4:
             new_string = number_string
 
@@ -306,7 +307,8 @@ class FilingViewerHandler:
                 if num_of_commas > 1:
                     for x in range(num_of_commas):
                         if x < num_of_commas - 1:
-                            new_string = number_string[(x*3):(x*3)+3]+','+ number_string[((x + 1)):((x + 1) * 3) + 3]
+                            new_string = number_string[(x * 3):(x * 3) + 3] + ',' + number_string[
+                                                                                    ((x + 1)):((x + 1) * 3) + 3]
                         else:
                             new_string = number_string[(x * 3):(x * 3) + 3]
                 else:
@@ -316,9 +318,17 @@ class FilingViewerHandler:
                 new_string = number_string[0:num_front_characters] + ','
                 for x in range(num_of_commas):
                     if x < num_of_commas - 1:
-                        new_string = new_string + number_string[((x * 3)+num_front_characters):((x * 3)+num_front_characters) + 3] + ',' + number_string[(((x+1) * 3)+num_front_characters):((x+1)*3+num_front_characters)]
+                        new_string = new_string + number_string[((x * 3) + num_front_characters):((
+                                                                                                              x * 3) + num_front_characters) + 3] + ',' + number_string[
+                                                                                                                                                          (
+                                                                                                                                                                      (
+                                                                                                                                                                                  (
+                                                                                                                                                                                              x + 1) * 3) + num_front_characters):(
+                                                                                                                                                                      (
+                                                                                                                                                                                  x + 1) * 3 + num_front_characters)]
                     else:
-                        new_string = new_string + number_string[((x * 3)+num_front_characters):((x * 3)+num_front_characters) + 3]
+                        new_string = new_string + number_string[
+                                                  ((x * 3) + num_front_characters):((x * 3) + num_front_characters) + 3]
 
         if is_value:
             new_string = '$' + new_string + ',000'
@@ -335,7 +345,6 @@ class FilingViewerHandler:
             return title + '|'
         else:
             return title + '|'
-
 
     def getPercentChange(self, second, first):
         if first is None or first == 0:
@@ -446,19 +455,24 @@ class FilingViewerHandler:
             unchunked.extend(self.result_lines[1])
         for page in self.result_lines[0]:
             unchunked.extend(page)
-
+        del self.result_lines
+        self.result_lines = [[],[]]
         if 'alpha' in sort_by:
             self.result_lines[0] = sorted(unchunked, reverse=is_desc)
 
         elif 'shrs/prn amount' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(''.join(x.split('|')[3].split('(')[0].strip().split(','))))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc,
+                                          key=lambda x: int(''.join(x.split('|')[3].split('(')[0].strip().split(','))))
 
         elif 'shrs/prn change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(''.join(x.split('|')[3].split('(')[1].split('%')[0].split(','))))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(
+                ''.join(x.split('|')[3].split('(')[1].split('%')[0].split(','))))
         elif 'value change' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: float(x.split('|')[2].split('(')[1].split('%')[0]))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc,
+                                          key=lambda x: float(x.split('|')[2].split('(')[1].split('%')[0]))
         elif 'value' in sort_by:
-            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(''.join(x.split('|')[2].split('(')[0].strip().split('$')[1].split(','))))
+            self.result_lines[0] = sorted(unchunked, reverse=is_desc, key=lambda x: int(
+                ''.join(x.split('|')[2].split('(')[0].strip().split('$')[1].split(','))))
 
         del unchunked
         if 'All' not in pcla:
@@ -477,26 +491,22 @@ class FilingViewerHandler:
                     temp.append(self.filings[x])
         self.filings = temp
 
-
-    def searchFilingPositons(self, search_string, res_per_page ):
-        print('searching in handler: '+search_string)
+    def searchFilingPositons(self, search_string, res_per_page):
+        print('searching in handler: ' + search_string)
         temp = []
         for page in self.result_lines[0]:
-            temp = temp + page
+            temp.extend(page)
         if len(self.result_lines) > 1:
             print('res lines len > 1')
-            temp = temp + self.result_lines[1]
+            temp.extend(self.result_lines[1])
         del self.result_lines
-        self.result_lines = [[],[]]
+        self.result_lines = [[], []]
         for position_line in temp:
             if search_string in str(position_line).split('|')[0]:
                 self.result_lines[0].append(position_line)
             else:
                 self.result_lines[1].append(position_line)
         self.result_lines[0] = list(self.chunks(self.result_lines[0], res_per_page))
-
-
-
 
     def getOtherManagers(self, from_date, until_date):
         with EdgarDatabase(False) as db:
@@ -511,8 +521,7 @@ class FilingViewerHandler:
                 names1.update(names2)
                 return list(names1)
             else:
-                return['None']
-
+                return ['None']
 
     def getFilingAscNumbers(self):
         temp = []
@@ -527,7 +536,8 @@ class FilingViewerHandler:
         return temp
 
     def generateResultHeader(self):
-        header = self.formatName("name of issuer") + self.formatTitle("class title") + "    value          |  shrs/ prn amount  | p/c/l | Other Manager"
+        header = self.formatName("name of issuer") + self.formatTitle(
+            "class title") + "    value          |  shrs/ prn amount  | p/c/l | Other Manager"
         return header
 
     def parseDetails(self, filings):
