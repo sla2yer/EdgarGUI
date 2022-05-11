@@ -22,7 +22,7 @@ class Messagebox_setSecId:
                           'The inforation is part of header in the format of "name (email)"\n' \
                           'This must be given as per the SEC fair access'
         label_current = tk.Label(self.toplevel, text=temp_string)
-        label_current.grid(column=0, row=0)
+        label_current.grid(column=0, row=0, columnspan=2, sticky=tk.E)
         label_name = tk.Label(self.toplevel, text="Name:")
         label_name.grid(column=0, row=1)
 
@@ -46,4 +46,6 @@ class Messagebox_setSecId:
         name = self.entry_name.get()
         email = self.entry_email.get()
         self.db.insertSecId(name, email)
+        self.db.commit()
+        self.db.close()
         self.toplevel.destroy()

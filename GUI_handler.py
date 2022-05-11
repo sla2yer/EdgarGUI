@@ -168,10 +168,13 @@ class GUI_handler:
         return int_list
 
     def setSecID_messageBox(self):
+
         return
 
     def clearDB_messageBox(self):
+        self.database.manualConnect()
         self.database.clear_database()
+        self.database.close()
         return
 
     def setTempFileLocation_messageBox(self):

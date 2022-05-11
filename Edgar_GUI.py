@@ -1,5 +1,7 @@
 import tkinter as tk
+# from tkinter import messagebox
 from tkinter import messagebox
+
 import tkcalendar
 import warnings
 from secedgar.filings import FilingType
@@ -13,22 +15,10 @@ import threading
 # susquehanna international group, LLP
 # Citadel Investment Advisory, Inc.
 # Melvin Capital Management LP
+from Messagebox_set_sec_id import Messagebox_setSecId
+
+
 class SecGUI:
-
-
-    def setSecID(self):
-        return
-
-    def setTempFileLocation(self):
-
-        return
-
-    def clearDB(self):
-        res = tk.messagebox.askyesno('Irreversible action!',
-                                     'Are you sure you want to clear the contents of the Database?\nCurrent tables will be dropped and reinitialized empty')
-        if res:
-            self.handler.clearDB_messageBox()
-
 
     def __init__(self, root):
         self.windowThreads = []
@@ -47,8 +37,9 @@ class SecGUI:
         self.menu_bar = tk.Menu(root, background='grey', foreground='black')
 
         self.menu_file = tk.Menu(self.menu_bar,background='white', foreground='black', tearoff=1 )
-        self.menu_file.add_command(label='Set SEC ID', command=self.setSecID)
-        self.menu_file.add_command(label='clear database', command=self.handler.clearDB_messageBox)
+        partial_setSec = partial(self.setSecID, root)
+        self.menu_file.add_command(label='Set SEC ID', command=partial_setSec)
+        self.menu_file.add_command(label='clear database', command=self.clearDB)
         self.menu_file.add_command(label='set temp file location', command=self.setTempFileLocation)
         self.menu_file.add_command(label="Exit")
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
@@ -132,6 +123,20 @@ class SecGUI:
         self.button_manual_check = tk.Button(root, text="check for new filings", padx=10, pady=10,
                                              command=self.checkButtonActions)
         self.button_manual_check.grid(row=0, column=4)
+
+    def setSecID(self, root):
+        Messagebox_setSecId(root=root)
+        return
+
+    def setTempFileLocation(self):
+
+        return
+
+    def clearDB(self):
+        res = messagebox.askyesno('Irreversible action!',
+                                     'Are you sure you want to clear the contents of the Database?\nCurrent tables will be dropped and reinitialized empty')
+        if res:
+            self.handler.clearDB_messageBox()
 
     def compareButtonActions(self):
         self.handler.compareButtonActions()
@@ -357,5 +362,4 @@ class SecGUI:
 
 root = tk.Tk()
 gui = SecGUI(root)
-
 root.mainloop()
