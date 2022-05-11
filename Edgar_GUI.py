@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import tkcalendar
 import warnings
 from secedgar.filings import FilingType
@@ -13,6 +14,22 @@ import threading
 # Citadel Investment Advisory, Inc.
 # Melvin Capital Management LP
 class SecGUI:
+
+
+    def setSecID(self):
+        return
+
+    def setTempFileLocation(self):
+
+        return
+
+    def clearDB(self):
+        res = tk.messagebox.askyesno('Irreversible action!',
+                                     'Are you sure you want to clear the contents of the Database?\nCurrent tables will be dropped and reinitialized empty')
+        if res:
+            self.handler.clearDB_messageBox()
+
+
     def __init__(self, root):
         self.windowThreads = []
         self.handler = GUI_handler()
@@ -30,9 +47,9 @@ class SecGUI:
         self.menu_bar = tk.Menu(root, background='grey', foreground='black')
 
         self.menu_file = tk.Menu(self.menu_bar,background='white', foreground='black', tearoff=1 )
-        self.menu_file.add_command(label='Set SEC ID')
-        self.menu_file.add_command(label='clear database')
-        self.menu_file.add_command(label='set temp file location')
+        self.menu_file.add_command(label='Set SEC ID', command=self.setSecID)
+        self.menu_file.add_command(label='clear database', command=self.handler.clearDB_messageBox)
+        self.menu_file.add_command(label='set temp file location', command=self.setTempFileLocation)
         self.menu_file.add_command(label="Exit")
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
         root.config(menu=self.menu_bar)

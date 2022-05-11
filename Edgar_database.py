@@ -1,7 +1,4 @@
 import mariadb
-
-
-# import sys
 class EdgarDatabase:
     def __init__(self, clead_db):
         self.con = mariadb.connect(user="edgarUser",
@@ -16,7 +13,14 @@ class EdgarDatabase:
             self.createTables()
         self.close()
 
+
+    def clear_database(self):
+        self.dropTables()
+        self.createTables()
+
     def dropTables(self):
+        self.cursor.execute("DROP TABLE IF EXISTS SecId")
+        self.cursor.execute("DROP TABLE IF EXISTS TempFileLocation")
         self.cursor.execute("DROP TABLE IF EXISTS TrackedEntityFilings")
         self.cursor.execute("DROP TABLE IF EXISTS FilingSignatureBlock")
         self.cursor.execute("DROP TABLE IF EXISTS FilingOtherManagers")
@@ -534,7 +538,7 @@ class EdgarDatabase:
     def insertEntityMailingAddress(self, entity_id, data):
         sql = '''INSERT INTO EntityMailingAddress(
                     filing_entity_id, street_1, street_2, city, state, zip)
-                    VALUES ( %(filing_entity_id)s,  %(street_1)s, %(street_2)s, %(city)s,  %(state)s,  %(zip)s);  '''
+                    VALUES ( %(filing_entity_id)s,  %(street_1)s, %(street_2)s, %(city)s,  %(state)s,  %(zip)s)'''
         self.cursor.execute(sql,
                             {'filing_entity_id': entity_id, 'street_1': data[0], 'street_2': data[1], 'city': data[2],
                              'state': data[3], 'zip': data[4]})
@@ -561,6 +565,32 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'filing_id': filing_id, 'name_of_signer': data[0], 'title_of_signer': data[1],
                                   'phone_number': data[2], 'signature': data[3], 'city': data[4],
                                   'state_or_county': data[5], 'signature_date': data[6]})
+
+    def getSecID(self):
+        sql = 'SELECT * FROM SecId'
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def getTempFileLocation(self):
+        sql = 'SELECT * FROM TempFileLocation'
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def insertSecId(self, name, email):
+        self.dropAndCreateSecId()
+        sql = ''' INSERT INTO SecId(name, email) VALUES(%(name)s, %(email)s)'''
+        self.cursor.execute(sql, {'name' :name, 'email':email})
+
+    def dropAndCreateSecId(self):
+        self.cursor.execute("DROP TABLE IF EXISTS SecId")
+        self.cursor.execute(''' CREATE TABLE IF NOT EXISTS SecId
+                                                    (
+                                                        name VARCHAR(40),
+                                                        email VARCHAR(40)
+                                                    )
+                ''')
+
+
 
     def getCreateTableSQL(self):
         statements = []
@@ -690,6 +720,17 @@ class EdgarDatabase:
                                                 PRIMARY KEY (track_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id)
                                             )''')
+        statements.append(''' CREATE TABLE IF NOT EXISTS SecId
+                                            (
+                                                name VARCHAR(40),
+                                                email VARCHAR(40)
+                                            )
+        ''')
+        statements.append(''' CREATE TABLE IF NOT EXISTS TempFileLocation
+                                                    (
+                                                        temp_file_location VARCHAR(40)
+                                                    )
+                ''')
         return statements
 
     def insertTrackedEntityFiling(self, filing_entity_id, filing_type, last_file_date):

@@ -166,3 +166,14 @@ class GUI_handler:
         for s in string_list:
             int_list.append(int(s))
         return int_list
+
+    def setSecID_messageBox(self):
+        return
+
+    def clearDB_messageBox(self):
+        self.database.clear_database()
+        return
+
+    def setTempFileLocation_messageBox(self):
+        return
+
