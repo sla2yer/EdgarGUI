@@ -16,6 +16,7 @@ import threading
 # Citadel Investment Advisory, Inc.
 # Melvin Capital Management LP
 from Messagebox_set_sec_id import Messagebox_setSecId
+from Messagebox_set_temp_file_loaction import Messagebox_setTempFileLocaiton
 
 
 class SecGUI:
@@ -40,7 +41,8 @@ class SecGUI:
         partial_setSec = partial(self.setSecID, root)
         self.menu_file.add_command(label='Set SEC ID', command=partial_setSec)
         self.menu_file.add_command(label='clear database', command=self.clearDB)
-        self.menu_file.add_command(label='set temp file location', command=self.setTempFileLocation)
+        partial_setTemp = partial(self.setTempFileLocation, root)
+        self.menu_file.add_command(label='set temp file location', command=partial_setTemp)
         self.menu_file.add_command(label="Exit")
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
         root.config(menu=self.menu_bar)
@@ -128,8 +130,8 @@ class SecGUI:
         Messagebox_setSecId(root=root)
         return
 
-    def setTempFileLocation(self):
-
+    def setTempFileLocation(self, root):
+        Messagebox_setTempFileLocaiton(root)
         return
 
     def clearDB(self):

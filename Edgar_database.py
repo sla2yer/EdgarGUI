@@ -576,10 +576,24 @@ class EdgarDatabase:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    def insertTempFileLocation(self, path):
+        self.dropAndCreateTempFile()
+        sql = '''INSERT INTO TempFileLocation(temp_file_location) VALUES(%(path)s)'''
+        self.cursor.execute(sql, {'path': path})
+
     def insertSecId(self, name, email):
         self.dropAndCreateSecId()
         sql = ''' INSERT INTO SecId(name, email) VALUES(%(name)s, %(email)s)'''
-        self.cursor.execute(sql, {'name' :name, 'email':email})
+        self.cursor.execute(sql, {'name': name, 'email': email})
+
+
+    def dropAndCreateTempFile(self):
+        self.cursor.execute("DROP TABLE IF EXISTS TempFileLocation")
+        self.cursor.execute('''  CREATE TABLE IF NOT EXISTS TempFileLocation
+                                                    (
+                                                        temp_file_location VARCHAR(40)
+                                                    )
+                            ''')
 
     def dropAndCreateSecId(self):
         self.cursor.execute("DROP TABLE IF EXISTS SecId")
@@ -588,9 +602,7 @@ class EdgarDatabase:
                                                         name VARCHAR(40),
                                                         email VARCHAR(40)
                                                     )
-                ''')
-
-
+                            ''')
 
     def getCreateTableSQL(self):
         statements = []
