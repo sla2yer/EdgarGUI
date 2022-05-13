@@ -22,6 +22,10 @@ from Messagebox_set_temp_file_loaction import Messagebox_setTempFileLocaiton
 class SecGUI:
 
     def __init__(self, root):
+        """
+
+        :type root: tk.Tk()
+        """
         self.windowThreads = []
         self.handler = GUI_handler()
         tk.Grid.columnconfigure(root, 0, weight=1)
@@ -43,7 +47,8 @@ class SecGUI:
         self.menu_file.add_command(label='clear database', command=self.clearDB)
         partial_setTemp = partial(self.setTempFileLocation, root)
         self.menu_file.add_command(label='set temp file location', command=partial_setTemp)
-        self.menu_file.add_command(label="Exit")
+        self.menu_file.add_command(label="Exit", command=root.destroy)
+
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
         root.config(menu=self.menu_bar)
         # ----------FILING TYPE COMBO BOX------------------------------------
@@ -362,6 +367,6 @@ class SecGUI:
         return filingType_dictionary
 
 
-root = tk.Tk()
-gui = SecGUI(root)
-root.mainloop()
+main_root = tk.Tk()
+gui = SecGUI(main_root)
+main_root.mainloop()

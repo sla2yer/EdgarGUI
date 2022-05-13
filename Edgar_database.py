@@ -576,33 +576,17 @@ class EdgarDatabase:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    def updateTempFileLocation(self, new_file_locaiton):
+        sql = ''' UPDATE TempFileLocation SET  temp_file_location =%(new_file_locaiton)s WHERE temp_file_id=1'''
+        self.cursor.execute(sql, {'new_file_locaiton': str(new_file_locaiton)})
+
     def insertTempFileLocation(self, path):
-        self.dropAndCreateTempFile()
         sql = '''INSERT INTO TempFileLocation(temp_file_location) VALUES(%(path)s)'''
         self.cursor.execute(sql, {'path': path})
 
     def insertSecId(self, name, email):
-        self.dropAndCreateSecId()
         sql = ''' INSERT INTO SecId(name, email) VALUES(%(name)s, %(email)s)'''
         self.cursor.execute(sql, {'name': name, 'email': email})
-
-
-    def dropAndCreateTempFile(self):
-        self.cursor.execute("DROP TABLE IF EXISTS TempFileLocation")
-        self.cursor.execute('''  CREATE TABLE IF NOT EXISTS TempFileLocation
-                                                    (
-                                                        temp_file_location VARCHAR(40)
-                                                    )
-                            ''')
-
-    def dropAndCreateSecId(self):
-        self.cursor.execute("DROP TABLE IF EXISTS SecId")
-        self.cursor.execute(''' CREATE TABLE IF NOT EXISTS SecId
-                                                    (
-                                                        name VARCHAR(40),
-                                                        email VARCHAR(40)
-                                                    )
-                            ''')
 
     def getCreateTableSQL(self):
         statements = []
@@ -740,7 +724,9 @@ class EdgarDatabase:
         ''')
         statements.append(''' CREATE TABLE IF NOT EXISTS TempFileLocation
                                                     (
-                                                        temp_file_location VARCHAR(40)
+                                                        temp_file_id INT NOT NULL AUTO_INCREMENT,
+                                                        temp_file_location VARCHAR(40),
+                                                        PRIMARY KEY (temp_file_id)
                                                     )
                 ''')
         return statements
