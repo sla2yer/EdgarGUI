@@ -1,17 +1,16 @@
 from secedgar.filings import Filing
-#from secedgar.cik_lookup import CIKLookup
 from secedgar.exceptions import EDGARQueryError
 from datetime import date
 import warnings
 import platform
-#in the 13f-HR/A document each of the holdings is wraped by <infoTable> and starts with <nameOfIssuer>
+
 
 class EdgarDownloader:
     def __init__(self):
         self.user_agent = 'jr'
         self.file_system = platform.system()
 
-    def searchForInstitute(self, institute, filing_type, start_date, end_date):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
+    def searchForInstitute(self, institute, filing_type, start_date, end_date, temp_folder_directory):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
         with warnings.catch_warnings(record=True) as w:
             print("searching with " + institute)
             print("start date: " + str(start_date) + "  end date:" + str(end_date))
@@ -61,9 +60,9 @@ class EdgarDownloader:
                         #If there are filings of the specifed type for the given institution
                         if (len(my_filings.get_urls()[institute]) > 0):
                             if("Linux" in self.file_system):
-                                my_filings.save('/home/pi/EdgarAppTempFolders')
+                                my_filings.save(temp_folder_directory + '/EdgarAppTempFolders')
                             elif("Windows" in self.file_system):
-                                my_filings.save('C:\\Users\\rubio\\Documents\\EdgarAppTempFolders')
+                                my_filings.save(temp_folder_directory + '\\EdgarAppTempFolders')
                             return"1"
 
                         #else filings were found but not of the specified type

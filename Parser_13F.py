@@ -24,7 +24,6 @@ class Parser_13f:
         day = date_string[3:5]
         formatted_date = year + '-' + month + '-' + day
         return formatted_date
-        return
 
     def getFilingEntityInfo(self, text):
         filing_detail_search_strings = ['COMPANY CONFORMED NAME:', 'CENTRAL INDEX KEY:', 'IRS NUMBER:']
@@ -291,5 +290,4 @@ class Parser_13f:
                     position_info_list.append(result_string)
 
             list_of_positions.append(position_info_list)
-
         return list_of_positions

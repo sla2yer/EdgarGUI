@@ -5,12 +5,15 @@ from Edgar_database import EdgarDatabase
 from File_manager import FileManager
 
 class Messagebox_setTempFileLocaiton:
+    # by the time that this is first initilized the database will already have the
+    # home directory set as the directory for the temp folder
     def __init__(self, root):
         self.db = EdgarDatabase(False)
         self.db.manualConnect()
         current_res = self.db.getTempFileLocation()
         current_string = 'current: '
         if len(current_res) == 0:
+            # -----------------------------make error message/pop up for if the home directory has not been set by this point-------------
             current_string = current_string + 'None!'
         else:
             current_string = current_string + str(current_res[0][1])
@@ -43,8 +46,8 @@ class Messagebox_setTempFileLocaiton:
         self.db.manualConnect()
         temp = self.stringVar_label_current.get()
         print(f'got from stringVar: {temp} ')
-        with FileManager() as fm:
-            temp = fm.cleanFiletypeString(temp)
+        # with FileManager() as fm:
+        #     temp = fm.cleanFiletypeString(temp)
 
         res = self.db.getTempFileLocation()
         if len(res) > 0:

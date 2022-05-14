@@ -21,8 +21,15 @@ class FileManager:
         with EdgarDatabase(False) as db:
             db.manualConnect()
             res = db.getTempFileLocation()
-            db.close()
-            return res
+            if len(res) < 1:
+                p = os.path.expanduser('~')
+                db.insertTempFileLocation(p)
+                db.commit()
+                db.close()
+                return p
+            else:
+                return str(res[0][1])
+
 
     def getHomePath(self):
         return os.path.expanduser('~')
@@ -36,7 +43,6 @@ class FileManager:
                 return '\\'.join(temp)
             else:
                 return filing_type
-
 
     def getAccessionNumbers(self, entity, filing_type):
         file_type = str(filing_type)[str(filing_type).find("_") + 1:].lower()

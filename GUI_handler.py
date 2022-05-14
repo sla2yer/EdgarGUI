@@ -1,3 +1,5 @@
+import os
+
 from Edgar_filingviewer import FilingViewer
 from Edgar_database import EdgarDatabase
 from Edgar_downloader import EdgarDownloader
@@ -28,7 +30,7 @@ class GUI_handler:
         else:
             end_date_int = end_date
 
-        result = self.downloader.searchForInstitute(institute, filing_type, start_date_int, end_date_int)
+        result = self.downloader.searchForInstitute(institute, filing_type, start_date_int, end_date_int, self.handler_files.getTempFolderDirectory())
         res_string = str(result)
         if ("will be skipped" in res_string):
             self.result_message_list.append("could not find the instituitons given, Please select one of the following")
@@ -181,11 +183,11 @@ class GUI_handler:
         self.database.manualConnect()
         res = self.database.getTempFileLocation()
         if len(res) < 1:
-            p = FileManager().getHomePath()
+            p = os.path.expanduser('~')
             self.database.insertTempFileLocation(p)
             self.database.commit()
             self.database.close()
             return p
         else:
-            return res[0]
+            return str(res[0][1])
 
