@@ -13,7 +13,7 @@ class Messagebox_setTempFileLocaiton:
         if len(current_res) == 0:
             current_string = current_string + 'None!'
         else:
-            current_string = current_string + current_res[0]
+            current_string = current_string + str(current_res[0][1])
 
 
         toplevel = tk.Toplevel(root)

@@ -2,19 +2,30 @@ import glob
 import os
 from pathlib import Path
 import platform
+from Edgar_database import EdgarDatabase
 
 
 class FileManager:
 
     def __init__(self):
-        i = 0
         self.file_system = platform.system()
+        self.temp_folder_directory = self.getTempFolderDirectory()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exception_type, exception_value, exception_tb):
         return
+
+    def getTempFolderDirectory(self):
+        with EdgarDatabase(False) as db:
+            db.manualConnect()
+            res = db.getTempFileLocation()
+            db.close()
+            return res
+
+    def getHomePath(self):
+        return os.path.expanduser('~')
 
     def cleanFiletypeString(self, filing_type):
         if 'linux' in str(self.file_system):
@@ -29,11 +40,10 @@ class FileManager:
 
     def getAccessionNumbers(self, entity, filing_type):
         file_type = str(filing_type)[str(filing_type).find("_") + 1:].lower()
-
-        if ("Linux" in self.file_system):
-            file_string1 = "/home/pi/EdgarAppTempFolders/" + entity + "/" + file_type + "/" + "*.txt"
-        elif ("Windows" in self.file_system):
-            file_string1 = "C:\\Users\\rubio\\Documents\\EdgarAppTempFolders\\" + entity + "\\" + file_type + "\\" + "*.txt"
+        if '\\' in self.getHomePath():
+            file_string1 = self.temp_folder_directory + "\\EdgarAppTempFolders\\" + entity + "\\" + file_type + "\\" + "*.txt"
+        else:
+            file_string1 = self.temp_folder_directory + "/EdgarAppTempFolders/" + entity + "/" + file_type + "/" + "*.txt"
         file_names = glob.glob(file_string1)
         temp_list = []
         for filename in file_names:
@@ -43,26 +53,26 @@ class FileManager:
         print(temp_list)
         return temp_list
 
-        # --------------TO DO --------------
 
     def getFileText(self, number):
-        if ("Linux" in self.file_system):
-            glob_string = "/home/pi/EdgarAppTempFolders/*/*/" + str(number) + ".txt"
-        elif ("Windows" in self.file_system):
-            glob_string = "C:\\Users\\rubio\\Documents\\EdgarAppTempFolders\\*\\*\\" + str(number) + ".txt"
+        if ("\\" not in self.file_system):
+            glob_string = self.temp_folder_directory + "/EdgarAppTempFolders/*/*/" + str(number) + ".txt"
+        else:
+            glob_string = self.temp_folder_directory + "\\EdgarAppTempFolders\\*\\*\\" + str(number) + ".txt"
         file_name = glob.glob(glob_string)
         file_text = Path(file_name[0]).read_text()
         return file_text
 
     def deleteTempFilesandFolders(self):
         # remove files
-        if ("Linux" in self.file_system):
-            glob_strings = ["/home/pi/EdgarAppTempFolders/*/*/*.txt", "/home/pi/EdgarAppTempFolders/*/*",
-                            "/home/pi/EdgarAppTempFolders/*"]
-        elif ("Windows" in self.file_system):
-            glob_strings = ["C:\\Users\\rubio\\Documents\\EdgarAppTempFolders\\*\\*\\*.txt",
-                            "C:\\Users\\rubio\\Documents\\EdgarAppTempFolders\\*\\*",
-                            "C:\\Users\\rubio\\Documents\\EdgarAppTempFolders\\*"]
+        if ("//" not in self.file_system):
+            glob_strings = [self.temp_folder_directory + "/EdgarAppTempFolders/*/*/*.txt",
+                            self.temp_folder_directory + "/EdgarAppTempFolders/*/*",
+                            self.temp_folder_directory + "/EdgarAppTempFolders/*"]
+        else:
+            glob_strings = [ self.temp_folder_directory + "\\EdgarAppTempFolders\\*\\*\\*.txt",
+                             self.temp_folder_directory + "\\EdgarAppTempFolders\\*\\*",
+                             self.temp_folder_directory + "\\EdgarAppTempFolders\\*"]
 
         file_names = glob.glob(glob_strings[0])
         for file in file_names:

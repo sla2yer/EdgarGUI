@@ -177,6 +177,15 @@ class GUI_handler:
         self.database.close()
         return
 
-    def setTempFileLocation_messageBox(self):
-        return
+    def getTempFileLocation(self):
+        self.database.manualConnect()
+        res = self.database.getTempFileLocation()
+        if len(res) < 1:
+            p = FileManager().getHomePath()
+            self.database.insertTempFileLocation(p)
+            self.database.commit()
+            self.database.close()
+            return p
+        else:
+            return res[0]
 

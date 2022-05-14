@@ -40,7 +40,7 @@ class SecGUI:
 
         # ------------MENU BAR---------------------------------
         self.menu_bar = tk.Menu(root, background='grey', foreground='black')
-
+        self.handler.getTempFileLocation()
         self.menu_file = tk.Menu(self.menu_bar,background='white', foreground='black', tearoff=1 )
         partial_setSec = partial(self.setSecID, root)
         self.menu_file.add_command(label='Set SEC ID', command=partial_setSec)
