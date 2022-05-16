@@ -171,6 +171,39 @@ class EdgarDatabase:
         else:
             return True
 
+    def isEntityAndFilingTypeTracked(self, entity_name, filing_type):
+        sql = '''SELECT 
+                    *
+                 FROM   
+                    TrackedEntityFilings, FilingEntity   
+                 WHERE
+                    FilingEntity.entity_name = %(entity_name)s
+                 AND
+                    FilingEntity.entity_id = TrackedEntityFilings.entity_id
+                 AND 
+                    TrackedEntityFilings.filing_type = %(filing_type)s'''
+        self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
+        res = self.cursor.fetchall()
+        if len(res) > 0:
+            return True
+        else:
+            return False
+
+    def isEntityAndFilingTypeInDatabase(self, entity_name, filing_type ):
+        sql = '''SELECT 
+                    DISTINCT FilingEntity.entity_id 
+                 FROM 
+                    Filing, FilingEntity
+                 WHERE
+                    FilingEntity.entity_name = %(entity_name)s
+                 AND
+                    Filing.form_type = %(filing_type)s
+                 AND
+                    Filing.entity_id = FilingEntity.entity_id
+        '''
+        self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
+        return self.cursor.fetchall()
+
     def getFiledOnDate(self, acc_num):
         sql = "SELECT filed_as_of_date FROM Filing WHERE accession_number = %(acc_num)s"
         self.cursor.execute(sql, {'acc_num': str(acc_num)})
@@ -208,11 +241,16 @@ class EdgarDatabase:
                     Filing, FilingEntity, EntityBusinessAddress, EntityMailingAddress, FilingSignatureBlock, EntityFormerName
                 WHERE
                     (Filing.accession_number = %(acc_num)s)
-                AND (Filing.filing_entity_id = FilingEntity.entity_id )
-                AND (Filing.filing_entity_id = EntityBusinessAddress.filing_entity_id)
-                AND (Filing.filing_entity_id = EntityMailingAddress.filing_entity_id)
-                AND (Filing.filing_id        = FilingSignatureBlock.filing_id)
-                AND (Filing.filing_entity_id = EntityFormerName.entity_id )
+                AND 
+                    (Filing.filing_entity_id = FilingEntity.entity_id )
+                AND 
+                    (Filing.filing_entity_id = EntityBusinessAddress.filing_entity_id)
+                AND 
+                    (Filing.filing_entity_id = EntityMailingAddress.filing_entity_id)
+                AND 
+                    (Filing.filing_id        = FilingSignatureBlock.filing_id)
+                AND 
+                    (Filing.filing_entity_id = EntityFormerName.entity_id )
         '''
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
@@ -229,10 +267,14 @@ class EdgarDatabase:
                     Filing, FilingEntity, EntityBusinessAddress, EntityMailingAddress, FilingSignatureBlock
                 WHERE
                     (Filing.accession_number = %(acc_num)s)
-                AND (Filing.filing_entity_id = FilingEntity.entity_id )
-                AND (Filing.filing_entity_id = EntityBusinessAddress.filing_entity_id)
-                AND (Filing.filing_entity_id = EntityMailingAddress.filing_entity_id)
-                AND (Filing.filing_id        = FilingSignatureBlock.filing_id)
+                AND 
+                    (Filing.filing_entity_id = FilingEntity.entity_id )
+                AND 
+                    (Filing.filing_entity_id = EntityBusinessAddress.filing_entity_id)
+                AND 
+                    (Filing.filing_entity_id = EntityMailingAddress.filing_entity_id)
+                AND 
+                    (Filing.filing_id        = FilingSignatureBlock.filing_id)
         '''
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
@@ -265,6 +307,16 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
 
+    def getTrackedEntities(self):
+        sql = '''SELECT 
+                    fe.entity_name, tef.filing_type
+                 FROM 
+                    TrackedEntityFilings AS tef, FilingEntity AS fe
+                 WHERE 
+                    fe.entity_id = tef.filing_entity_id '''
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
     def checkForOtherManagerSeqNums(self, acc_num, cusip):
         sql = '''SELECT DISTINCT
                     InfoTable13FData.other_manager_sequence_numbers
@@ -283,7 +335,6 @@ class EdgarDatabase:
         return self.cursor.fetchall()
 
     def checkForOtherManager(self, acc_num):
-
         sql = '''
         select  FilingEntity.entity_name 
         from FilingEntity, FilingOtherManagers, Filing 
@@ -292,18 +343,6 @@ class EdgarDatabase:
         and (Filing.accession_number = %(acc_num)s);
         
         '''
-        sql2 = '''SELECT 
-                    FilingEntity.entity_name 
-                FROM
-                    FilingEntity, FilingOtherManagers, Filing
-                WHERE
-                
-                    
-                    (FilingEntity.entity_id = FilingOtherManagers.manager_entity_id ) 
-                    AND 
-                    (FilingOtherManagers.filing_id =  Filing.filing_id)
-                    AND 
-                    (Filing.accession_number = %(acc_num)s)'''
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
 
@@ -485,9 +524,6 @@ class EdgarDatabase:
         self.commit()
 
     def insertInfoTable13F(self, filing_id, data):
-        print("insert info table 13F")
-        print("data ", end="")
-        print(data)
         sql = ''' INSERT INTO InfoTable13F(
                     filing_id, other_managers, table_entry_total, table_value_total, is_confidential_omitted)
                     VALUES ( %(filing_id)s,  %(other_managers)s,  %(table_entry_total)s,  %(table_value_total)s,  %(is_confidential_omitted)s)  '''
@@ -495,7 +531,6 @@ class EdgarDatabase:
                                   'table_value_total': data[2], 'is_confidential_omitted': data[3]})
 
     def insertInfoTable13FData(self, infotable_id, data):
-        #        print("cusip:" + str(data[2]))
         sql = '''  INSERT INTO InfoTable13FData(
                     infotable_id, cusip, value, shares_principle_amount, shares_or_principle, put_long_call, investment_discretion, other_manager_sequence_numbers, sole_voting_authority, shared_voting_authority, none_voting_authority)
                     VALUES ( %(infotable_id)s,  %(cusip)s,  %(value)s,  %(shares_principle_amount)s,  %(shares_or_principle)s,  %(put_long_call)s,  %(investment_discretion)s,  %(other_manager_sequence_numbers)s,  %(sole_voting_authority)s,  %(shared_voting_authority)s,  %(none_voting_authority)s) '''
@@ -588,18 +623,31 @@ class EdgarDatabase:
         sql = ''' INSERT INTO SecId(name, email) VALUES(%(name)s, %(email)s)'''
         self.cursor.execute(sql, {'name': name, 'email': email})
 
+    def getMostRecentFilingDateForFilingType(self, entity_name, filing_type):
+        sql = '''SELECT 
+                    MAX(Filing.filed_as_of_date)
+                 FROM 
+                    Filing, FilingEntity
+                 WHERE
+                    Filing.filing_entity_id = FilingEntity.entity_id
+                 AND
+                    Filing.form_type = %(filing_type)s
+                 AND
+                    FilingEntity.entity_name = %(entity_name)s
+        '''
+        self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
+        return self.cursor.fetchall()
+
     def getCreateTableSQL(self):
-        statements = []
-        statements.append('''CREATE TABLE IF NOT EXISTS FilingEntity(
+        statements = ['''CREATE TABLE IF NOT EXISTS FilingEntity(
                                             entity_id INT NOT NULL AUTO_INCREMENT,
                                             entity_name VARCHAR(80)   NOT NULL,
                                             cik VARCHAR(20)   NOT NULL,
                                             irs_number VARCHAR(20),
                                             state_of_incorperation VARCHAR(5),
                                             PRIMARY KEY (entity_id)
-                                            )''')
-
-        statements.append(''' CREATE TABLE IF NOT EXISTS Filing(
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS Filing(
                                                 filing_id INT NOT NULL AUTO_INCREMENT, 
                                                 filing_entity_id INT NOT NULL,
                                                 accession_number VARCHAR(25)   NOT NULL,
@@ -614,8 +662,8 @@ class EdgarDatabase:
                                                 is_reported_by_another_manager boolean NOT NULL,
                                                 PRIMARY KEY (filing_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id)
-                                                )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS InfoTable13F(  
+                                                )''',
+                      ''' CREATE TABLE IF NOT EXISTS InfoTable13F(  
                                                 infotable_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_id INT NOT NULL,
                                                 other_managers INT NOT NULL,
@@ -624,14 +672,14 @@ class EdgarDatabase:
                                                 is_confidential_omitted VARCHAR(5) NOT NULL,
                                                 PRIMARY KEY (infotable_id),
                                                 FOREIGN KEY (filing_id) REFERENCES Filing (filing_id)
-                                            )''')
-        statements.append('''CREATE TABLE IF NOT EXISTS Security(
+                                            )''',
+                      '''CREATE TABLE IF NOT EXISTS Security(
                                             cusip VARCHAR(9) NOT NULL,
                                             name_of_issuer VARCHAR(40)   NOT NULL,
                                             title_of_class VARCHAR(40)   NOT NULL,
                                             PRIMARY KEY (cusip)
-                                        )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS InfoTable13FData
+                                        )''',
+                      ''' CREATE TABLE IF NOT EXISTS InfoTable13FData
                                             (
                                                 share_issue_id INT NOT NULL AUTO_INCREMENT,
                                                 infotable_id INT NOT NULL,
@@ -648,8 +696,8 @@ class EdgarDatabase:
                                                 PRIMARY KEY (share_issue_id),
                                                 FOREIGN KEY (infotable_id) REFERENCES InfoTable13F (infotable_id),
                                                 FOREIGN KEY (cusip) REFERENCES Security (cusip)
-                                            )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS EntityBusinessAddress
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS EntityBusinessAddress
                                             ( 
                                                 business_address_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_entity_id INT NOT NULL,
@@ -661,8 +709,8 @@ class EdgarDatabase:
                                                 business_phone_number VARCHAR(40)   NOT NULL,
                                                 PRIMARY KEY (business_address_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id) 
-                                            )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS EntityFormerName
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS EntityFormerName
                                             ( 
                                                 former_name_id INT NOT NULL AUTO_INCREMENT,
                                                 entity_id INT NOT NULL,
@@ -670,8 +718,8 @@ class EdgarDatabase:
                                                 date_name_changed date NOT NULL,
                                                 PRIMARY KEY (former_name_id),
                                                 FOREIGN KEY (entity_id) REFERENCES FilingEntity (entity_id) 
-                                            )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS EntityMailingAddress
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS EntityMailingAddress
                                             ( 
                                                 mailng_address_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_entity_id INT NOT NULL,
@@ -682,8 +730,8 @@ class EdgarDatabase:
                                                 zip VARCHAR(10)  NOT NULL,
                                                 PRIMARY KEY (mailng_address_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id) 
-                                            )''')
-        statements.append('''CREATE TABLE IF NOT EXISTS FilingOtherManagers
+                                            )''',
+                      '''CREATE TABLE IF NOT EXISTS FilingOtherManagers
                                             ( 
                                                 other_manager_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_id INT NOT NULL,
@@ -692,8 +740,8 @@ class EdgarDatabase:
                                                 PRIMARY KEY (other_manager_id),
                                                 FOREIGN KEY (manager_entity_id)  REFERENCES FilingEntity (entity_id), 
                                                 FOREIGN KEY (filing_id) REFERENCES Filing(filing_id) 
-                                            ) ''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS FilingSignatureBlock
+                                            ) ''',
+                      ''' CREATE TABLE IF NOT EXISTS FilingSignatureBlock
                                             (
                                                 signature_block_id INT NOT NULL AUTO_INCREMENT,
                                                 filing_id INT NOT NULL,
@@ -706,34 +754,32 @@ class EdgarDatabase:
                                                 signature_date date NOT NULL,
                                                 PRIMARY KEY (signature_block_id),
                                                 FOREIGN KEY (filing_id) REFERENCES Filing (filing_id) 
-                                            )''')
-        statements.append('''CREATE TABLE IF NOT EXISTS TrackedEntityFilings
+                                            )''',
+                      '''CREATE TABLE IF NOT EXISTS TrackedEntityFilings
                                             (
                                                 track_id  INT NOT NULL AUTO_INCREMENT,
                                                 filing_entity_id INT NOT NULL,
                                                 filing_type VARCHAR(10)  NOT NULL, 
-                                                last_file_date DATE NOT NULL,  
                                                 PRIMARY KEY (track_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id)
-                                            )''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS SecId
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS SecId
                                             (
                                                 name VARCHAR(40),
                                                 email VARCHAR(40)
-                                            )
-        ''')
-        statements.append(''' CREATE TABLE IF NOT EXISTS TempFileLocation
+                                            )''',
+                      ''' CREATE TABLE IF NOT EXISTS TempFileLocation
                                                     (
                                                         temp_file_id INT NOT NULL AUTO_INCREMENT,
                                                         temp_file_location VARCHAR(40),
                                                         PRIMARY KEY (temp_file_id)
                                                     )
-                ''')
+                ''']
+
         return statements
 
-    def insertTrackedEntityFiling(self, filing_entity_id, filing_type, last_file_date):
+    def insertTrackedEntityFiling(self, filing_entity_id, filing_type):
         sql = '''INSERT INTO TrackedEntityFilings(
                     filing_entity_id, filing_type,last_file_date)
                     VALUES ( %(filing_entity_id)s,   %(filing_type)s,   %(last_file_date)s) '''
-        self.cursor.execute(sql, {'filing_entity_id': filing_entity_id, 'filing_type': filing_type,
-                                  'last_file_date': last_file_date})
+        self.cursor.execute(sql, {'filing_entity_id': filing_entity_id, 'filing_type': filing_type})

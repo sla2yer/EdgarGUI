@@ -2,10 +2,10 @@ import tkinter as tk
 from functools import partial
 from tkinter import filedialog
 from Edgar_database import EdgarDatabase
-from File_manager import FileManager
+
 
 class Messagebox_setTempFileLocaiton:
-    # by the time that this is first initilized the database will already have the
+    # by the time that this is first initialized the database will already have the
     # home directory set as the directory for the temp folder
     def __init__(self, root):
         self.db = EdgarDatabase(False)
@@ -34,27 +34,18 @@ class Messagebox_setTempFileLocaiton:
         self.button_close = tk.Button(toplevel, text='cancel', command=toplevel.destroy)
         self.button_close.grid(row=2, column=2)
 
-
-
     def pickButtonCommand(self, toplevel):
         dirname =tk.filedialog.askdirectory(parent=toplevel, initialdir="/", title='Please select a directory')
         self.stringVar_label_current.set('current: ' + dirname)
 
-
     def saveButtonCommand(self, toplevel):
-        print('save command')
         self.db.manualConnect()
         temp = self.stringVar_label_current.get()
-        print(f'got from stringVar: {temp} ')
-        # with FileManager() as fm:
-        #     temp = fm.cleanFiletypeString(temp)
-
         res = self.db.getTempFileLocation()
         if len(res) > 0:
             self.db.updateTempFileLocation(temp[9:len(temp)-1])
         else:
             self.db.insertTempFileLocation(temp[9:len(temp)-1])
         self.db.commit()
-        print('inserted')
         self.db.close()
         toplevel.destroy()

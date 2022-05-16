@@ -10,6 +10,7 @@ import asyncio
 from GUI_handler import GUI_handler
 from functools import partial
 import threading
+# networkX graphing
 
 # BNP Paribas Asset Management Holding
 # susquehanna international group, LLP
@@ -35,13 +36,13 @@ class SecGUI:
         filings = self.getFilings()
         self.filling_dict = self.makeFilingDictionary()
 
-        self.clicked = tk.StringVar(root)
-        self.clicked.set(filings[5])
+        self.stringVar_cbox_ftypes = tk.StringVar(root)
+        self.stringVar_cbox_ftypes.set(filings[5])
 
         # ------------MENU BAR---------------------------------
         self.menu_bar = tk.Menu(root, background='grey', foreground='black')
 
-        self.menu_file = tk.Menu(self.menu_bar,background='white', foreground='black', tearoff=1 )
+        self.menu_file = tk.Menu(self.menu_bar, background='white', foreground='black', tearoff=1)
         partial_setSec = partial(self.setSecID, root)
         self.menu_file.add_command(label='Set SEC ID', command=partial_setSec)
         self.menu_file.add_command(label='clear database', command=self.clearDB)
@@ -52,10 +53,10 @@ class SecGUI:
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
         root.config(menu=self.menu_bar)
         # ----------FILING TYPE COMBO BOX------------------------------------
-        self.combo_box = tk.ttk.Combobox(root, textvariable=self.clicked)
-        self.combo_box['values'] = filings
-        self.combo_box['state'] = 'readonly'
-        self.combo_box.grid(row=3, column=1, sticky=tk.S)
+        self.cbox_filing_types = tk.ttk.Combobox(root, textvariable=self.stringVar_cbox_ftypes)
+        self.cbox_filing_types['values'] = filings
+        self.cbox_filing_types['state'] = 'readonly'
+        self.cbox_filing_types.grid(row=3, column=1, sticky=tk.S)
 
         # -------LABELS FOR FILING TYPE, START DATE, END DATE--------------------------------
         self.label_filingType = tk.Label(root, text="Filing type to search for")
@@ -96,7 +97,7 @@ class SecGUI:
 
         self.list_box_track = tk.Listbox(root, width=35, exportselection=False, selectmode=tk.MULTIPLE)
         self.list_box_track.grid(row=2, column=0, rowspan=3, sticky="nsew")
-        self.list_box_track.insert(1, "None")
+        self.list_box_track.insert(0, self.handler.getTrackedEntities())
         self.label_track_list_title.grid(row=1, column=0)
 
         self.list_box_results = tk.Listbox(root, width=35, exportselection=False, selectmode=tk.MULTIPLE)
@@ -141,7 +142,8 @@ class SecGUI:
 
     def clearDB(self):
         res = messagebox.askyesno('Irreversible action!',
-                                     'Are you sure you want to clear the contents of the Database?\nCurrent tables will be dropped and reinitialized empty')
+                                  'Are you sure you want to clear the contents of the Database?\n'
+                                  'Current tables will be dropped and reinitialized empty')
         if res:
             self.handler.clearDB_messageBox()
 
@@ -164,17 +166,18 @@ class SecGUI:
 
     def updateTrackList(self):
         self.list_box_track.delete(0, tk.END)
-        count = 0
         self.list_box_track.insert(0, self.handler.getTrackedEntities())
 
     def trackButtonActions(self):
+        # if filings were found in a given search and the track button is clicked
+        # then grab the name and send pass it to the handler
         if self.handler.foundEntity():
             # what this needs to do is get the name from the entry box (as an institute was found from the contents)
             # pass the name to the handler that will add it to the database and then simply reupdate the list
             # Pass the name as a list as multiple names can be selected as well
-            self.handler.trackButtonActions([self.entry_institute_name.get()])
-
+            self.handler.trackButtonActions(entity_list=[self.entry_institute_name.get()], filing_type=self.stringVar_cbox_ftypes.get())
         else:
+            # the name searched matched several entities and the user has selected one or more
             selection = self.list_box_results.curselection()
             entities_to_track = []
             if 0 in selection:
@@ -183,12 +186,7 @@ class SecGUI:
                 entities_to_track.append(self.list_box_results.get(index))
             # ------------------------------------------still gotta fix this method in the handler--------------------------------------------
             self.handler.trackButtonActions(entities_to_track)
-
-            for x in range(len(entities_to_track)):
-                self.list_box_track.insert(x, entities_to_track[x])
-
-        # --------------from here call a method from the handler that generates the track list from the db---------------
-        # ------------------------then clear and append the track box--------------------------------------
+        self.updateTrackList()
 
     def tempAction(self):
         # fv = FilingViewer()
@@ -254,10 +252,11 @@ class SecGUI:
 
         # searchForFiling() returns false if no filings are found howver, 0 results because of diff file type gives a true result
         # if True is returned, loop through getReultsMessage()
-        print(self.filling_dict[self.combo_box.get()])
+        print(self.filling_dict[self.cbox_filing_types.get()])
         self.list_box_results.delete(0, tk.END)
         box_index = 0
-        if self.handler.searchForFiling(self.entry_institute_name.get(), self.filling_dict[self.combo_box.get()], start_date, end_date):
+        if self.handler.searchForFiling(self.entry_institute_name.get(), self.filling_dict[self.cbox_filing_types.get()],
+                                        start_date, end_date):
 
             for result in self.handler.getResultMessage():
                 self.list_box_results.insert(box_index, result)

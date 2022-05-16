@@ -1,5 +1,4 @@
 import os
-
 from Edgar_filingviewer import FilingViewer
 from Edgar_database import EdgarDatabase
 from Edgar_downloader import EdgarDownloader
@@ -9,13 +8,53 @@ import re
 
 
 class GUI_handler:
-
     def __init__(self):
         self.downloader = EdgarDownloader()
         self.database = EdgarDatabase(True)
         self.handler_files = FileManager()
         self.result_message_list = []
         self.found_entity = False
+
+    def getMostRecentFilingDate_search(self, entity_name, filing_type):
+        """
+        attempts download and parse of filings to ensure database has most recent filings
+        before retrieving and returning the latest filing date from the database
+        :type entity_name: str
+        :returns latest_file_date: str
+        """
+        self.database.manualConnect()
+        # if there are any filings in the database filed by the specified entity and filing type
+        if self.database.isEntityAndFilingTypeInDatabase(entity_name):
+            # at this point there for sure is a filing n the database
+            # grab the most recent filings file date from the database and set start_date = to it
+            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type)
+            start_date = res[0]
+        else:
+            # set start_date to '' to get all filings from the entity
+            start_date = ''
+
+        search_results = self.downloader.searchForInstitute(
+                                                    institute=entity_name,
+                                                    filing_type=filing_type,
+                                                    start_date=start_date,
+                                                    end_date='',
+                                                    temp_folder_directory=self.handler_files.getTempFolderDirectory())
+
+        # ---------------it is possible that the error returned indicates a vpn error or a 'didn't find entity' error
+        # ---------------The vpn error will be dealt with later, the 'didn't find entity' error shouldnt happen
+        # ---------------but should be accounted for late with a popup
+
+        # close before parse incase the connection times out while parsing
+        self.database.close()
+        # if != '1' then filings were not found, so the value in start_date is the earliest filing date
+        if search_results != '1':
+            return start_date
+        else:
+            self.parseResults(entity=entity_name, filing_type=filing_type)
+            self.database.manualConnect()
+            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type)
+            self.database.close()
+            return res[0]
 
     # the date parameters are passed over as strings of dateTime objects or are "" if not being used
     def searchForFiling(self, institute, filing_type, start_date, end_date):
@@ -73,12 +112,22 @@ class GUI_handler:
         return
 
     def openFilings(self, filings, toplevel):
-        fv = FilingViewer(filings, toplevel)
+        FilingViewer(filings, toplevel)
         return
 
-    def trackButtonActions(self, entity_list):
-        # for each entity in the list grab their entity_id using their name
+    def trackButtonActions(self, entity_list, filing_type):
 
+        for entity_name in entity_list:
+            # entity_id = self.database.getEntityIDFromName(entity_name)
+            # check if being tracked
+            if not self.database.isEntityAndFilingTypeTracked(entity_name, filing_type):
+                # then insert into the tracked table
+                entity_id = self.database.getEntityIDFromName(entity_name)
+                self.database.insertTrackedEntityFiling(filing_entity_id=entity_id, filing_type=filing_type)
+            else: # the entity is already being tracked,
+                # get the most recent filing date currently in the database
+                # run this to ensure database is up-to-date
+                self.getMostRecentFilingDate_search(entity_name=entity_name, filing_type=filing_type)
         return
 
     def scrub(self, text):
@@ -99,11 +148,20 @@ class GUI_handler:
             return True
 
     def parseResults(self, entity, filing_type):
+        """
+        parses the filings that were downloaded as a result of a search
+        any and only files in the temp folder's directory for the given entity and filing_type are parsed
+        nothing is returned, and results are stored in the database
+        :type filing_type: str
+        :type entity: str
+        """
         # use the handler_files to get the accession numbers from the file names
         list_of_accession_numbers = self.handler_files.getAccessionNumbers(entity, filing_type)
 
         # first check if the entity searched for is in the database,
         if self.database.isEntityInDatabase(entity):
+            # if the entity is in the database but the IRS number is null then the FilingEntity
+            # database entry needs to be completed
             if self.database.getEntityIRSNumber(entity) is None:
                 with Parser(self.handler_files.getFileText(list_of_accession_numbers[0]), str(filing_type)) as p:
                     p.completeFilingEntity(self.database, entity)
@@ -152,17 +210,23 @@ class GUI_handler:
         return self.result_message_list
 
     def getTrackedEntities(self):
-        temp = []
         with EdgarDatabase(False) as db:
             db.manualConnect()
-            temp = db.getTrackedEntities()
+            res = db.getTrackedEntities()
+        if len(res) < 1:
+            return 'None'
+        else:
+            tracking_strings = ['     Entity Name          |       Filing Type      ']
+            for r in res:
+                tracking_strings.append(r[0] + '      |     ' + r[1])
+            return tracking_strings
 
     def clearResultMessage(self):
         self.found_entity = False
         self.result_message_list.clear()
 
     def dateToInt(self, date):
-        # the date  is a string in the format of yyy-mm-dd, with a zero in the first position for single digit numbers (e.g 01).
+        # the date  is a string in the format of yyyy-mm-dd, with a zero in the first position for single digit numbers (e.g 01).
         string_list = date.split("-")
         int_list = []
         for s in string_list:
@@ -190,4 +254,3 @@ class GUI_handler:
             return p
         else:
             return str(res[0][1])
-

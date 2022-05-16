@@ -11,9 +11,12 @@ class EdgarDownloader:
         self.file_system = platform.system()
 
     def searchForInstitute(self, institute, filing_type, start_date, end_date, temp_folder_directory):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
+        """
+        Searches for filings based on the given parameters
+        :returns '1' if filings were found and saved, otherwise the error message
+
+        """
         with warnings.catch_warnings(record=True) as w:
-            print("searching with " + institute)
-            print("start date: " + str(start_date) + "  end date:" + str(end_date))
             warnings.simplefilter("always")
             try:
                 #check if there are dates and and if so do the relevant search
@@ -59,11 +62,8 @@ class EdgarDownloader:
                         #this will cause an error if executed when there was no result
                         #If there are filings of the specifed type for the given institution
                         if (len(my_filings.get_urls()[institute]) > 0):
-                            if("Linux" in self.file_system):
-                                my_filings.save(temp_folder_directory + '/EdgarAppTempFolders')
-                            elif("Windows" in self.file_system):
-                                my_filings.save(temp_folder_directory + '\\EdgarAppTempFolders')
-                            return"1"
+                            my_filings.save(temp_folder_directory + '/EdgarAppTempFolders')
+                            return "1"
 
                         #else filings were found but not of the specified type
                         else:
@@ -71,7 +71,6 @@ class EdgarDownloader:
 
                     #else a cik was not find that matched the institute given but there are recomendations
                     else:
-                        print('print line 74 ed downloader')
                         return w[0].message
                 except(EDGARQueryError):
                     return w[0].message
