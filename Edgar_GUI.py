@@ -165,18 +165,26 @@ class SecGUI:
             i = i + 1
 
     def updateTrackList(self):
+        print('updating tracked list')
         self.list_box_track.delete(0, tk.END)
-        self.list_box_track.insert(0, self.handler.getTrackedEntities())
+        box_index = 0
+        for result in self.handler.getTrackedEntities():
+            self.list_box_track.insert(box_index, result)
+            box_index = box_index + 1
 
     def trackButtonActions(self):
         # if filings were found in a given search and the track button is clicked
         # then grab the name and send pass it to the handler
         if self.handler.foundEntity():
+            print('GUI-trackedbuttonactions: handler found entity')
             # what this needs to do is get the name from the entry box (as an institute was found from the contents)
             # pass the name to the handler that will add it to the database and then simply reupdate the list
             # Pass the name as a list as multiple names can be selected as well
-            self.handler.trackButtonActions(entity_list=[self.entry_institute_name.get()], filing_type=self.stringVar_cbox_ftypes.get())
+            tl = []
+            tl.append(self.entry_institute_name.get())
+            self.handler.trackButtonActions(entity_list=tl, filing_type=self.filling_dict[self.cbox_filing_types.get()])
         else:
+            print('no found entit')
             # the name searched matched several entities and the user has selected one or more
             selection = self.list_box_results.curselection()
             entities_to_track = []
@@ -185,7 +193,7 @@ class SecGUI:
             for index in selection:
                 entities_to_track.append(self.list_box_results.get(index))
             # ------------------------------------------still gotta fix this method in the handler--------------------------------------------
-            self.handler.trackButtonActions(entities_to_track)
+            self.handler.trackButtonActions(entities_to_track, self.stringVar_cbox_ftypes.get())
         self.updateTrackList()
 
     def tempAction(self):

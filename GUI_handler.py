@@ -22,21 +22,30 @@ class GUI_handler:
         :type entity_name: str
         :returns latest_file_date: str
         """
+        print('get most recent filing date')
+        filing_type_string = str(filing_type)[str(filing_type).find('_') + 1:len(str(filing_type))]
         self.database.manualConnect()
         # if there are any filings in the database filed by the specified entity and filing type
-        if self.database.isEntityAndFilingTypeInDatabase(entity_name):
+        if self.database.isEntityAndFilingTypeInDatabase(entity_name=entity_name, filing_type=filing_type_string):
+            print('entty is in the database with the filing type')
+
             # at this point there for sure is a filing n the database
             # grab the most recent filings file date from the database and set start_date = to it
-            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type)
-            start_date = res[0]
+            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type_string)
+            start_date = str(res[0][0])
         else:
             # set start_date to '' to get all filings from the entity
             start_date = ''
+        print(f'start  date: {start_date}')
+        if len(start_date) > 0:
+            start_date_int = self.dateToInt(start_date)
+        else:
+            start_date_int = start_date
 
         search_results = self.downloader.searchForInstitute(
                                                     institute=entity_name,
                                                     filing_type=filing_type,
-                                                    start_date=start_date,
+                                                    start_date=start_date_int,
                                                     end_date='',
                                                     temp_folder_directory=self.handler_files.getTempFolderDirectory())
 
@@ -50,14 +59,16 @@ class GUI_handler:
         if search_results != '1':
             return start_date
         else:
-            self.parseResults(entity=entity_name, filing_type=filing_type)
             self.database.manualConnect()
-            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type)
+            self.parseResults(entity=entity_name, filing_type=filing_type)
+            self.database.commit()
+            res = self.database.getMostRecentFilingDateForFilingType(entity_name, filing_type_string)
             self.database.close()
-            return res[0]
+            return res[0][0]
 
     # the date parameters are passed over as strings of dateTime objects or are "" if not being used
     def searchForFiling(self, institute, filing_type, start_date, end_date):
+        self.found_entity = False
         # check length of date strings to see if dates are provided
         # date is returned as a list of int values [ yyyy, mm, dd]
         if len(start_date) > 0:
@@ -68,7 +79,7 @@ class GUI_handler:
             end_date_int = self.dateToInt(end_date)
         else:
             end_date_int = end_date
-
+        print('searched for filng')
         result = self.downloader.searchForInstitute(institute, filing_type, start_date_int, end_date_int, self.handler_files.getTempFolderDirectory())
         res_string = str(result)
         if ("will be skipped" in res_string):
@@ -116,18 +127,28 @@ class GUI_handler:
         return
 
     def trackButtonActions(self, entity_list, filing_type):
-
+        print('tracked button actions')
+        print(f'entity list: {entity_list}')
+        filing_type_string = str(filing_type)
+        filing_type_string = filing_type_string[filing_type_string.find('_') + 1:len(filing_type_string)]
         for entity_name in entity_list:
             # entity_id = self.database.getEntityIDFromName(entity_name)
             # check if being tracked
-            if not self.database.isEntityAndFilingTypeTracked(entity_name, filing_type):
+            last_file_date = self.getMostRecentFilingDate_search(entity_name=entity_name, filing_type=filing_type)
+            self.database.manualConnect()
+            entity_id = self.database.getEntityIDFromName(entity_name)
+            if not self.database.isEntityAndFilingTypeTracked(entity_name, filing_type_string):
                 # then insert into the tracked table
-                entity_id = self.database.getEntityIDFromName(entity_name)
-                self.database.insertTrackedEntityFiling(filing_entity_id=entity_id, filing_type=filing_type)
+                print('not being tracked')
+
+                self.database.insertTrackedEntityFiling(filing_entity_id=entity_id, filing_type=filing_type_string, last_file_date=last_file_date)
             else: # the entity is already being tracked,
+                self.database.updateTrackedLastFileDate(filing_entity_id=entity_id, filing_type=filing_type_string, last_file_date=last_file_date)
+
                 # get the most recent filing date currently in the database
                 # run this to ensure database is up-to-date
-                self.getMostRecentFilingDate_search(entity_name=entity_name, filing_type=filing_type)
+        self.database.commit()
+        self.database.close()
         return
 
     def scrub(self, text):
@@ -216,13 +237,13 @@ class GUI_handler:
         if len(res) < 1:
             return 'None'
         else:
-            tracking_strings = ['     Entity Name          |       Filing Type      ']
+            tracking_strings = ['     Entity Name          |       Filing Type      |      Last file Date']
             for r in res:
-                tracking_strings.append(r[0] + '      |     ' + r[1])
+                print(r)
+                tracking_strings.append(r[0] + '      |     ' + r[1] + '      |     ' + r[2].strftime("%d %B %Y"))
             return tracking_strings
 
     def clearResultMessage(self):
-        self.found_entity = False
         self.result_message_list.clear()
 
     def dateToInt(self, date):

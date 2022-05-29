@@ -179,9 +179,9 @@ class EdgarDatabase:
                  WHERE
                     FilingEntity.entity_name = %(entity_name)s
                  AND
-                    FilingEntity.entity_id = TrackedEntityFilings.entity_id
+                    FilingEntity.entity_id = TrackedEntityFilings.filing_entity_id
                  AND 
-                    TrackedEntityFilings.filing_type = %(filing_type)s'''
+                    TrackedEntityFilings.filing_type LIKE CONCAT('%', %(filing_type)s, '%')'''
         self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
         res = self.cursor.fetchall()
         if len(res) > 0:
@@ -197,9 +197,9 @@ class EdgarDatabase:
                  WHERE
                     FilingEntity.entity_name = %(entity_name)s
                  AND
-                    Filing.form_type = %(filing_type)s
+                    Filing.form_type LIKE CONCAT('%', %(filing_type)s, '%')
                  AND
-                    Filing.entity_id = FilingEntity.entity_id
+                    Filing.filing_entity_id = FilingEntity.entity_id
         '''
         self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
         return self.cursor.fetchall()
@@ -309,7 +309,7 @@ class EdgarDatabase:
 
     def getTrackedEntities(self):
         sql = '''SELECT 
-                    fe.entity_name, tef.filing_type
+                    fe.entity_name, tef.filing_type, tef.last_file_date
                  FROM 
                     TrackedEntityFilings AS tef, FilingEntity AS fe
                  WHERE 
@@ -631,7 +631,7 @@ class EdgarDatabase:
                  WHERE
                     Filing.filing_entity_id = FilingEntity.entity_id
                  AND
-                    Filing.form_type = %(filing_type)s
+                    Filing.form_type LIKE CONCAT('%', %(filing_type)s, '%')
                  AND
                     FilingEntity.entity_name = %(entity_name)s
         '''
@@ -759,7 +759,8 @@ class EdgarDatabase:
                                             (
                                                 track_id  INT NOT NULL AUTO_INCREMENT,
                                                 filing_entity_id INT NOT NULL,
-                                                filing_type VARCHAR(10)  NOT NULL, 
+                                                filing_type VARCHAR(10)  NOT NULL,
+                                                last_file_date date NOT NULL, 
                                                 PRIMARY KEY (track_id),
                                                 FOREIGN KEY (filing_entity_id) REFERENCES FilingEntity (entity_id)
                                             )''',
@@ -778,8 +779,27 @@ class EdgarDatabase:
 
         return statements
 
-    def insertTrackedEntityFiling(self, filing_entity_id, filing_type):
+    def insertTrackedEntityFiling(self, filing_entity_id, filing_type, last_file_date):
+        print(filing_entity_id)
+        print(filing_type)
+        print(last_file_date)
         sql = '''INSERT INTO TrackedEntityFilings(
                     filing_entity_id, filing_type,last_file_date)
                     VALUES ( %(filing_entity_id)s,   %(filing_type)s,   %(last_file_date)s) '''
-        self.cursor.execute(sql, {'filing_entity_id': filing_entity_id, 'filing_type': filing_type})
+        self.cursor.execute(sql, {'filing_entity_id': filing_entity_id,
+                                  'filing_type': filing_type,
+                                  'last_file_date': last_file_date})
+
+    def updateTrackedLastFileDate(self, filing_entity_id, filing_type, last_file_date):
+        sql = ''' UPDATE 
+                    TrackedEntityFilings 
+                SET  
+                    last_file_date = %(last_file_date)s 
+                WHERE 
+                    filing_entity_id = %(filing_entity_id)s AND filing_type  
+                AND 
+                    filing_type = %(filing_type)s
+                    '''
+        self.cursor.execute(sql, {'filing_entity_id': filing_entity_id,
+                                  'filing_type': filing_type,
+                                  'last_file_date': last_file_date})

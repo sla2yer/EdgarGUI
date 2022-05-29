@@ -16,6 +16,7 @@ class EdgarDownloader:
         :returns '1' if filings were found and saved, otherwise the error message
 
         """
+        print(f'searched filing type:{filing_type}')
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             try:
