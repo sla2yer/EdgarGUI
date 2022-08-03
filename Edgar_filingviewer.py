@@ -7,7 +7,8 @@ from Edgar_filingviewer_handler import FilingViewerHandler
 class FilingViewer:
     def __init__(self,  filings,  root_parent):
         self.root = root_parent
-        
+        tk.Grid.columnconfigure(self.root, 0, weight=1)
+        tk.Grid.columnconfigure(self.root, 7, weight=1)
         tk.Grid.rowconfigure(self.root,  6,  weight=1)
         self.handler = FilingViewerHandler(filings)
 
@@ -68,7 +69,7 @@ class FilingViewer:
         self.label_sort.grid(row=4,  column=4)
         self.cbox_pcl.grid(row=4,  column=5)
         self.cbox_sortby.grid(row=4,  column=6)
-        self.cbox_asc_desc.grid(row=4,  column=7)
+        self.cbox_asc_desc.grid(row=4,  column=7, sticky="w")
 
         self.label_results_header = tk.Label(self.root, text="\t\tname of issuer\t\t              | \tclass title\t|\tvalue\t\t|\tshrs/ prn amount\t| p/c/l\t|\tOther Manager")
         self.label_results_header.grid(row=5,  column=0, columnspan=8, sticky='w')
@@ -82,7 +83,7 @@ class FilingViewer:
         self.cbox_other_managers['values'] = self.handler.getOtherManagers(self.cbox_date_from.get(), self.cbox_date_until.get())
         self.cbox_other_managers['state'] = 'readonly'
         self.cbox_other_managers.current(0)
-        self.cbox_other_managers.grid(row=2,  column=7)
+        self.cbox_other_managers.grid(row=2,  column=7,  sticky="nsew")
 
 
         lbox_font = ("courier",  9)

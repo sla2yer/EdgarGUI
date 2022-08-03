@@ -10,7 +10,7 @@ class EdgarDownloader:
         self.user_agent = 'jr'
         self.file_system = platform.system()
 
-    def searchForInstitute(self, institute, filing_type, start_date, end_date, temp_folder_directory):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
+    def searchForInstitute(self, institute, filing_type, start_date, end_date, temp_folder_directory, count, user_agent):   #'SUSQUEHANNA INTERNATIONAL GROUP, LLP'
         """
         Searches for filings based on the given parameters
         :returns '1' if filings were found and saved, otherwise the error message
@@ -24,33 +24,33 @@ class EdgarDownloader:
                 if len(start_date) == 0 and len(end_date) == 0:
                     my_filings = Filing(cik_lookup=[institute],
                                         filing_type=filing_type,
-                                        count=15,
-                                        user_agent=self.user_agent)
+                                        count=count,
+                                        user_agent=user_agent)
                    
                 
                 elif  len(start_date) > 0 and len(end_date)  == 0:
                     my_filings = Filing(cik_lookup=[institute],
                                         filing_type=filing_type,
-                                        count=15,
-                                        user_agent=self.user_agent,
-                                        start_date = date(start_date[0], start_date[1], start_date[2]))
+                                        count=count,
+                                        user_agent=user_agent,
+                                        start_date=date(start_date[0], start_date[1], start_date[2]))
                    
                 
                 elif  len(start_date) > 0 and len(end_date)  > 0:
                     my_filings = Filing(cik_lookup=[institute],
                                         filing_type=filing_type,
-                                        count=15,
-                                        start_date = date(start_date[0], start_date[1], start_date[2]),
-                                        end_date = date(end_date[0], end_date[1], end_date[2]),
-                                        user_agent=self.user_agent)
+                                        count=count,
+                                        start_date=date(start_date[0], start_date[1], start_date[2]),
+                                        end_date=date(end_date[0], end_date[1], end_date[2]),
+                                        user_agent=user_agent)
                    
                     
                 elif  len(start_date)  == 0 and len(end_date)  > 0:
                     my_filings = Filing(cik_lookup=[institute],
                                         filing_type=filing_type,
-                                        count=15,
-                                        end_date = date(end_date[0], end_date[1], end_date[2]),
-                                        user_agent=self.user_agent)
+                                        count=count,
+                                        end_date=date(end_date[0], end_date[1], end_date[2]),
+                                        user_agent=user_agent)
                 #my_filings.get_urls()
             except (EDGARQueryError):
                 return "Error: No results found, please check spelling"
@@ -73,6 +73,7 @@ class EdgarDownloader:
                     #else a cik was not find that matched the institute given but there are recomendations
                     else:
                         return w[0].message
+                #else there were no filings found
                 except(EDGARQueryError):
-                    return w[0].message
+                    return "Error: No results found, please check spelling"
     

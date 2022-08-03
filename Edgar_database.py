@@ -121,19 +121,32 @@ class EdgarDatabase:
         sql = "SELECT cik FROM FilingEntity WHERE entity_name = %(entity)s"
         self.cursor.execute(sql, {'entity': entity})
         result = self.cursor.fetchone()
-        return result[0]
+        if result is not None:
+            return result[0]
+        else:
+            return None
 
     def getEntityIDFromName(self, name):
-        sql = "SELECT entity_id FROM FilingEntity WHERE entity_name = %(name)s"
-        self.cursor.execute(sql, {'name': name})
+        name = name.upper()
+        name = name.strip()
+        # entity_name=%(name)s
+        print(f'getEntityIDFromName----> NAME: ,{name},')
+        sql = "SELECT entity_id FROM FilingEntity WHERE entity_name LIKE CONCAT('%', %(name)s, '%')"
+        self.cursor.execute(sql, {'name': str(name)})
         result = self.cursor.fetchone()
-        return result[0]
+        if result is None:
+            return None
+        else:
+            return result[0]
 
     def getEntityIDFromCIK(self, cik):
-        sql = "SELECT entity_id FROM FilingEntity WHERE cik = %(cik)s"
+        sql = "SELECT entity_id FROM FilingEntity WHERE cik=%(cik)s"
         self.cursor.execute(sql, {'cik': str(cik)})
         result = self.cursor.fetchone()
-        return result[0]
+        if result is None:
+            return None
+        else:
+            return result[0]
 
     def updateFilingEntity(self, entity_id, irs_number, state, cik):
         if cik is None:
@@ -145,7 +158,7 @@ class EdgarDatabase:
                                 {'irs_number': str(irs_number), 'entity_id': entity_id, 'state': state, 'cik': cik})
 
     def isAccessionNumberInDatabase(self, number):
-        sql = "SELECT accession_number FROM Filing WHERE accession_number = %(number)s"
+        sql = "SELECT accession_number FROM Filing WHERE accession_number=%(number)s"
         self.cursor.execute(sql, {'number': str(number)})
         result = self.cursor.fetchone()
         if result is None:
@@ -154,7 +167,8 @@ class EdgarDatabase:
             return True
 
     def isEntityCIKInDatabase(self, entity_cik):
-        sql = "SELECT entity_id FROM FilingEntity WHERE cik = %(entity_cik)s"
+        # LIKE CONCAT('%', %(entity)s, '%')
+        sql = "SELECT entity_id FROM FilingEntity WHERE cik=%(entity_cik)s"
         self.cursor.execute(sql, {'entity_cik': str(entity_cik)})
         result = self.cursor.fetchone()
         if result is None:
@@ -163,9 +177,10 @@ class EdgarDatabase:
             return True
 
     def isEntityInDatabase(self, entity):
-        sql = "SELECT entity_id FROM FilingEntity WHERE entity_name = %(entity)s"
+        sql = "SELECT entity_id FROM FilingEntity WHERE entity_name LIKE CONCAT('%', %(entity)s, '%')"
         self.cursor.execute(sql, {'entity': entity})
         result = self.cursor.fetchone()
+        print(f'isEntityInDatabase, Name: {entity}, res:{result}')
         if result is None:
             return False
         else:
@@ -494,18 +509,35 @@ class EdgarDatabase:
         sql = "SELECT is_reported_by_another_manager FROM Filing WHERE accession_number = %(acc_num)s"
         self.cursor.execute(sql, {'acc_num': str(acc_num)})
         result = self.cursor.fetchone()
-        if len(result) > 0:
-            if result[0] is True:
-                return False
-            else:
-                return True
+        if result is not None:
+            if len(result) > 0:
+                if result[0] is True:
+                    return False
+                else:
+                    return True
+
+    def isFormerNameInDb(self, entity_id, name_info):
+        print(entity_id)
+        print(name_info)
+        sql = '''   SELECT  * 
+                    FROM    EntityFormerName
+                    WHERE   entity_id               = %(entity_id)s
+                    AND     former_name   = %(name)s
+                    AND     date_name_changed      = %(change_date)s
+        '''
+        self.cursor.execute(sql, {'entity_id': entity_id, 'name': name_info[0], 'change_date': name_info[1]})
+        res = self.cursor.fetchall()
+        if len(res) > 0:
+            return True
+        else:
+            return False
 
     def insertFilingEntity(self, data):
         print(f'insert filing entity---------------------{data}')
         sql = ''' INSERT INTO FilingEntity(
                     entity_name, cik, irs_number, state_of_incorperation)
                     VALUES (  %(entity_name)s,  %(cik)s,  %(irs_number)s,  %(state_of_incorperation)s);  '''
-        self.cursor.execute(sql, {'entity_name': data[0], 'cik': str(data[1]), 'irs_number': data[2],
+        self.cursor.execute(sql, {'entity_name': data[0].upper(), 'cik': str(data[1]), 'irs_number': data[2],
                                   'state_of_incorperation': data[3]})
         self.commit()
 
@@ -582,6 +614,7 @@ class EdgarDatabase:
         sql = ''' INSERT INTO EntityFormerName(
                     entity_id, former_name, date_name_changed)
                     VALUES ( %(entity_id)s,  %(former_name)s,  %(date_name_changed)s) '''
+        print(f'insertformer name-------entity id:{entity_id}, data:{data}')
         self.cursor.execute(sql, {'entity_id': entity_id, 'former_name': data[0], 'date_name_changed': data[1]})
 
     def insertFilingOtherManagers(self, data):
@@ -633,7 +666,7 @@ class EdgarDatabase:
                  AND
                     Filing.form_type LIKE CONCAT('%', %(filing_type)s, '%')
                  AND
-                    FilingEntity.entity_name = %(entity_name)s
+                    FilingEntity.entity_name CONCAT('%', %(entity_name)s, '%')
         '''
         self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
         return self.cursor.fetchall()
@@ -714,7 +747,7 @@ class EdgarDatabase:
                                             ( 
                                                 former_name_id INT NOT NULL AUTO_INCREMENT,
                                                 entity_id INT NOT NULL,
-                                                former_name VARCHAR(40)   NOT NULL,
+                                                former_name VARCHAR(100)   NOT NULL,
                                                 date_name_changed date NOT NULL,
                                                 PRIMARY KEY (former_name_id),
                                                 FOREIGN KEY (entity_id) REFERENCES FilingEntity (entity_id) 

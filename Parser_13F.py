@@ -34,6 +34,8 @@ class Parser_13f:
             eol_index = text.find('\n', start_index)
             result_string = text[start_index:eol_index]
             result_string = self.scrub(result_string)
+            if 'NAME' in detail:
+                result_string = result_string.lower()
             info_strings.append(result_string)
         start_index = text.find('STATE OF INCORPORATION:', start_index)
         if start_index == -1:
@@ -133,20 +135,27 @@ class Parser_13f:
         return info_strings
 
     def getFormerNameInfo(self, text):
+        # dont need to add check if former name already added as it should only be added whe completing entity---------
+
         info_strings = []
         start_index = text.find('FORMER COMPANY:')
         if start_index < 0:
             return info_strings
         detail_strings = ['NAME:', 'CHANGE:']
-        for detail in detail_strings:
-            start_index = text.find(detail, start_index) + len(detail)
-            eol_index = text.find('\n', start_index)
-            result_string = text[start_index:eol_index]
-            result_string = self.scrub(result_string)
-            info_strings.append(result_string)
+        while start_index > 0:
+            temp_list = []
+            for detail in detail_strings:
+                start_index = text.find(detail, start_index) + len(detail)
+                eol_index = text.find('\n', start_index)
+                result_string = text[start_index:eol_index]
+                result_string = self.scrub(result_string)
+                temp_list.append(result_string)
+            info_strings.append(temp_list)
+            start_index = text.find('FORMER COMPANY:', start_index)
         return info_strings
 
     def getFilingManagerInfo(self, text):
+
         print("getting filing manager info")
         start_index = 0
         info_strings = []
@@ -170,10 +179,16 @@ class Parser_13f:
         list_of_all_managers = []
         start_index = text.find('<summaryPage>')
         detail_strings = ['sequenceNumber', 'cik', 'form13FFileNumber', 'name']
-        start_index = text.find('otherIncludedManagersCount', start_index) + len('otherIncludedManagersCount') + 1
-        eol_index = text.find('otherIncludedManagersCount', start_index) - 2
-        num_of_managers = text[start_index:eol_index]
-        num_of_managers = int(num_of_managers)
+        if 'otherIncludedManagersCount' in text:
+            start_index = text.find('otherIncludedManagersCount', start_index) + len('otherIncludedManagersCount') + 1
+            eol_index = text.find('otherIncludedManagersCount', start_index) - 2
+            num_of_managers = text[start_index:eol_index]
+            num_of_managers = int(num_of_managers)
+        else:
+            start_index = text.find('otherIncludedManagersCount', start_index) + len('otherIncludedManagersCount') + 1
+            num_of_managers = 1
+
+
         # print("number of other managers: " + str(num_of_managers))
         loopcount = 0
         if num_of_managers > 0:

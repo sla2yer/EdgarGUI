@@ -59,12 +59,12 @@ class FileManager:
         print(temp_list)
         return temp_list
 
-
-    def getFileText(self, number):
+    def getFileText(self, acc_number, name, filing_type):
         if ("\\" not in self.file_system):
-            glob_string = self.temp_folder_directory + "/EdgarAppTempFolders/*/*/" + str(number) + ".txt"
+            glob_string = f"{self.temp_folder_directory}/EdgarAppTempFolders/{name}/{filing_type}/{str(acc_number)}.txt"
         else:
-            glob_string = self.temp_folder_directory + "\\EdgarAppTempFolders\\*\\*\\" + str(number) + ".txt"
+            glob_string = f"{self.temp_folder_directory}\\EdgarAppTempFolders\\{name}\\{filing_type}\\{str(acc_number)}.txt"
+        print(f'glob string: {glob_string}')
         file_name = glob.glob(glob_string)
         file_text = Path(file_name[0]).read_text()
         return file_text

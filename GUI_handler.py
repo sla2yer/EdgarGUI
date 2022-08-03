@@ -41,20 +41,24 @@ class GUI_handler:
             start_date_int = self.dateToInt(start_date)
         else:
             start_date_int = start_date
-
+        self.database.manualConnect()
+        ua = self.database.getSecID()
+        self.database.close()
+        ua = f"{ua[0][0]} ({ua[0][1]})"
         search_results = self.downloader.searchForInstitute(
                                                     institute=entity_name,
                                                     filing_type=filing_type,
                                                     start_date=start_date_int,
                                                     end_date='',
-                                                    temp_folder_directory=self.handler_files.getTempFolderDirectory())
+                                                    temp_folder_directory=self.handler_files.getTempFolderDirectory(),
+                                                    count=100,
+                                                    user_agent=ua)
 
         # ---------------it is possible that the error returned indicates a vpn error or a 'didn't find entity' error
         # ---------------The vpn error will be dealt with later, the 'didn't find entity' error shouldnt happen
         # ---------------but should be accounted for late with a popup
 
-        # close before parse incase the connection times out while parsing
-        self.database.close()
+
         # if != '1' then filings were not found, so the value in start_date is the earliest filing date
         if search_results != '1':
             return start_date
@@ -80,7 +84,18 @@ class GUI_handler:
         else:
             end_date_int = end_date
         print('searched for filng')
-        result = self.downloader.searchForInstitute(institute, filing_type, start_date_int, end_date_int, self.handler_files.getTempFolderDirectory())
+        self.database.manualConnect()
+        ua = self.database.getSecID()
+        print(ua)
+        self.database.close()
+        ua = f"{ua[0][0]} ({ua[0][1]})"
+        result = self.downloader.searchForInstitute(institute,
+                                                    filing_type,
+                                                    start_date_int,
+                                                    end_date_int,
+                                                    self.handler_files.getTempFolderDirectory(),
+                                                    count=100,
+                                                    user_agent=ua)
         res_string = str(result)
         if ("will be skipped" in res_string):
             self.result_message_list.append("could not find the instituitons given, Please select one of the following")
@@ -176,6 +191,7 @@ class GUI_handler:
         :type filing_type: str
         :type entity: str
         """
+        filing_type_getText = str(filing_type)[str(filing_type).find('_')+1:len(str(filing_type))]
         # use the handler_files to get the accession numbers from the file names
         list_of_accession_numbers = self.handler_files.getAccessionNumbers(entity, filing_type)
 
@@ -184,27 +200,28 @@ class GUI_handler:
             # if the entity is in the database but the IRS number is null then the FilingEntity
             # database entry needs to be completed
             if self.database.getEntityIRSNumber(entity) is None:
-                with Parser(self.handler_files.getFileText(list_of_accession_numbers[0]), str(filing_type)) as p:
+                with Parser(self.handler_files.getFileText(list_of_accession_numbers[0], entity, filing_type_getText), filing_type) as p:
                     p.completeFilingEntity(self.database, entity)
             # if the entity is already in the database then check each filing with the accession numbers
             # to find if they need to be parsed or not
-
-            for number in list_of_accession_numbers:
-                # check if the accession number is not in the database
-                if not self.database.isAccessionNumberInDatabase(self.formatAccNumber(number)):
-                    parser = Parser(self.handler_files.getFileText(number), str(filing_type))
-                    parser.parseFiling(self.database, entity)
+        # - --------this is commented out for consolidation----------------------
+            # for number in list_of_accession_numbers:
+            #     # check if the accession number is not in the database
+            #     if not self.database.isAccessionNumberInDatabase(self.formatAccNumber(number)):
+            #         parser = Parser(self.handler_files.getFileText(number), str(filing_type))
+            #         parser.parseFiling(self.database, entity)
         else:
             # else the entity is not in the database then for the first accession number parse the entity
-            with Parser(self.handler_files.getFileText(list_of_accession_numbers[0]), str(filing_type)) as p:
+            print(f"gui handler 214: filing type: {filing_type}")
+            with Parser(self.handler_files.getFileText(list_of_accession_numbers[0], entity, filing_type_getText), filing_type) as p:
                 p.parseFilingAndEntity(self.database)
-
-            # now just get the details from the rest of the filings
-            for number in list_of_accession_numbers:
-                # check if the accession number is in the database
-                if not self.database.isAccessionNumberInDatabase(self.formatAccNumber(number)):
-                    parser = Parser(self.handler_files.getFileText(number), str(filing_type))
-                    parser.parseFiling(self.database, entity)
+        # -----------------this was tabbed left for consolidation------------------
+        # now just get the details from the rest of the filings
+        for number in list_of_accession_numbers:
+            # check if the accession number is in the database
+            if not self.database.isAccessionNumberInDatabase(self.formatAccNumber(number)):
+                parser = Parser(self.handler_files.getFileText(number, entity, filing_type_getText), filing_type)
+                parser.parseFiling(self.database, entity)
 
     def formatAccNumber(self, acc_num):
         acc_num = acc_num[:4] + "-" + acc_num[4:6] + "-" + acc_num[6:]

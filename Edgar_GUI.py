@@ -11,7 +11,7 @@ from GUI_handler import GUI_handler
 from functools import partial
 import threading
 # networkX graphing
-
+# BNP PARIBAS ASSET MANAGEMENT Belgium
 # BNP Paribas Asset Management Holding
 # susquehanna international group, LLP
 # Citadel Investment Advisory, Inc.
@@ -248,7 +248,7 @@ class SecGUI:
 
     def threadSearchButtonAction(self):
         asyncio.set_event_loop(asyncio.new_event_loop())
-        # dates are passed to the handler as datetime objects, the heandler then converts them to integers for the edgar search
+        # dates are passed to the handler as datetime objects, the handler then converts them to integers for the edgar search
         if self.checkbox_start_variable.get():
             start_date = str(self.calander_start.get_date())
         else:
@@ -258,7 +258,7 @@ class SecGUI:
         else:
             end_date = ""
 
-        # searchForFiling() returns false if no filings are found howver, 0 results because of diff file type gives a true result
+        # searchForFiling() returns false if no filings are found however, 0 results because of diff file type gives a true result
         # if True is returned, loop through getReultsMessage()
         print(self.filling_dict[self.cbox_filing_types.get()])
         self.list_box_results.delete(0, tk.END)

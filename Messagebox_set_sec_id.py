@@ -6,7 +6,7 @@ class Messagebox_setSecId:
     def __init__(self, root):
         self.toplevel = tk.Toplevel(root)
         self.toplevel.title("Set SEC Search ID")
-        self.toplevel.geometry("230x100")
+        self.toplevel.resizable(False, False)
         self.db = EdgarDatabase(False)
         self.db.manualConnect()
         current_sec_id = self.db.getSecID()

@@ -85,8 +85,11 @@ class FilingViewerHandler:
             self.result_lines[0] = list(self.chunks(self.result_lines[0], parameters['res per page']))
             self.sortResults('All', 'alphabetical', False, parameters['res per page'])
 
-        return self.result_lines[0][parameters['page'] - 1]
-
+        try:
+            t = self.result_lines[0][parameters['page'] - 1]
+            return t
+        except IndexError:
+            print(f"INDEX ERROR ---- len res_line = {len(self.result_lines)}")
     def chunks(self, lst, n):
         for i in range(0, len(lst), n):
             yield lst[i: i + n]
@@ -477,6 +480,8 @@ class FilingViewerHandler:
         del unchunked
         if 'All' not in pcla:
             for line in range(len(self.result_lines[0])):
+                if len(self.result_lines[0]) < 1:
+                    print("ERROR efh481 resline len==0")
                 if pcla not in self.result_lines[0][line]:
                     self.result_lines[1].append(self.result_lines[0].pop(line))
         self.result_lines[0] = list(self.chunks(self.result_lines[0], res_per_page))
