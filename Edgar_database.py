@@ -270,6 +270,21 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'acc_num': acc_num})
         return self.cursor.fetchall()
 
+    def getFormerNames(self, acc_num):
+        sql = '''   SELECT
+                        EntityFormerName.former_name, EntityFormerName.date_name_changed
+                    FROM 
+                        Filing, FilingEntity, EntityFormerName
+                    WHERE
+                        (Filing.accession_number = %(acc_num)s) 
+                    AND 
+                        (Filing.filing_entity_id = FilingEntity.entity_id )
+                    AND 
+                        (Filing.filing_entity_id = EntityFormerName.entity_id )
+        '''
+        self.cursor.execute(sql, {'acc_num': acc_num})
+        return self.cursor.fetchall()
+
     def getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self, acc_num):
         print(str(acc_num))
         sql = ''' SELECT 

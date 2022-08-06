@@ -402,13 +402,20 @@ class FilingViewerHandler:
                 return [name, class_title, other_manager]
 
     def getCompanyDetailsString(self):
+        # self.db.manualConnect()
+        # details = self.db.getAllFilingEntityDetailsFromAccessionNumber(self.filings[0][0])
+        # former_name = True
+        # if (len(details) == 0):
+        #     former_name = False
+        #     details = self.db.getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self.filings[0][0])
+        # self.db.close()
+
         self.db.manualConnect()
-        details = self.db.getAllFilingEntityDetailsFromAccessionNumber(self.filings[0][0])
-        former_name = True
-        if (len(details) == 0):
-            former_name = False
-            details = self.db.getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self.filings[0][0])
+        details = self.db.getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self.filings[0][0])
+
+        former_name_details = self.db.getFormerNames(self.filings[0][0])
         self.db.close()
+
         detail_string = 'Details about the filings and the filer:\n\n' \
                         'Entitry name:\t\t{name}\n' \
                         'CIK:\t\t\t{cik}\n' \
@@ -429,9 +436,10 @@ class FilingViewerHandler:
                                                                   p_num=details[0][14], sign_loc_1=details[0][15],
                                                                   sign_loc_2=details[0][16],
                                                                   sign_date=details[0][17])
-        if former_name:
-            detail_string = detail_string + '\n\nFormer name:\t\t' + details[0][18]
-            detail_string = detail_string + '\nDate of name change:\t' + str(details[0][19])
+        if len(former_name_details) > 0:
+            detail_string = detail_string + '\n\nFormer name:\t\tDate of name change:'
+            for former_name in former_name_details:
+                detail_string = detail_string + '\n' + former_name[0] + '\t\t' + str(former_name[1])
         else:
             detail_string = detail_string + '\n\nFormer name:\t\tNone'
             detail_string = detail_string + '\nDate of name change:\tNone'
