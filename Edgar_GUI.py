@@ -184,7 +184,7 @@ class SecGUI:
             tl.append(self.entry_institute_name.get())
             self.handler.trackButtonActions(entity_list=tl, filing_type=self.filling_dict[self.cbox_filing_types.get()])
         else:
-            print('no found entit')
+            print('no found entity')
             # the name searched matched several entities and the user has selected one or more
             selection = self.list_box_results.curselection()
             entities_to_track = []
@@ -192,7 +192,6 @@ class SecGUI:
                 selection.remove(0)
             for index in selection:
                 entities_to_track.append(self.list_box_results.get(index))
-            # ------------------------------------------still gotta fix this method in the handler--------------------------------------------
             self.handler.trackButtonActions(entities_to_track, self.stringVar_cbox_ftypes.get())
         self.updateTrackList()
 

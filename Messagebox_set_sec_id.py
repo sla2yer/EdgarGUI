@@ -10,11 +10,12 @@ class Messagebox_setSecId:
         self.db = EdgarDatabase(False)
         self.db.manualConnect()
         current_sec_id = self.db.getSecID()
+        print(current_sec_id)
         self.db.close()
-        if len(current_sec_id) > 1:
+        if len(current_sec_id) > 0:
             temp_string = f'The ID is currently set with the following\n' \
-                          f'Name:{current_sec_id[0]}\n' \
-                          f'Email:{current_sec_id[1]}\n' \
+                          f'Name:{current_sec_id[0][0]}\n' \
+                          f'Email:{current_sec_id[0][1]}\n' \
                           f'Please insert any changes and press ok to submit, or cancel or close the window'
         else:
             temp_string = 'There is no user_agent ID set\n' \

@@ -304,14 +304,14 @@ class FilingViewerHandler:
         # 58,745
         if len(number_string) < 4:
             new_string = number_string
-
         else:
             if num_front_characters == 0:
                 if num_of_commas > 1:
                     for x in range(num_of_commas):
                         if x < num_of_commas - 1:
-                            new_string = number_string[(x * 3):(x * 3) + 3] + ',' + number_string[
-                                                                                    ((x + 1)):((x + 1) * 3) + 3]
+                            new_string = number_string[(x * 3):(x * 3) + 3] + \
+                                         ',' + \
+                                         number_string[(x + 1):((x + 1) * 3) + 3]
                         else:
                             new_string = number_string[(x * 3):(x * 3) + 3]
                 else:
@@ -321,18 +321,13 @@ class FilingViewerHandler:
                 new_string = number_string[0:num_front_characters] + ','
                 for x in range(num_of_commas):
                     if x < num_of_commas - 1:
-                        new_string = new_string + number_string[((x * 3) + num_front_characters):((
-                                                                                                              x * 3) + num_front_characters) + 3] + ',' + number_string[
-                                                                                                                                                          (
-                                                                                                                                                                      (
-                                                                                                                                                                                  (
-                                                                                                                                                                                              x + 1) * 3) + num_front_characters):(
-                                                                                                                                                                      (
-                                                                                                                                                                                  x + 1) * 3 + num_front_characters)]
+                        new_string = new_string + \
+                                     number_string[((x*3) + num_front_characters):((x*3) + num_front_characters) + 3] + \
+                                     ',' + \
+                                     number_string[(((x + 1) * 3) + num_front_characters):((x + 1) * 3 + num_front_characters)]
                     else:
                         new_string = new_string + number_string[
                                                   ((x * 3) + num_front_characters):((x * 3) + num_front_characters) + 3]
-
         if is_value:
             new_string = '$' + new_string + ',000'
         ts = new_string + " (" + percent_change + "%)"
@@ -402,14 +397,6 @@ class FilingViewerHandler:
                 return [name, class_title, other_manager]
 
     def getCompanyDetailsString(self):
-        # self.db.manualConnect()
-        # details = self.db.getAllFilingEntityDetailsFromAccessionNumber(self.filings[0][0])
-        # former_name = True
-        # if (len(details) == 0):
-        #     former_name = False
-        #     details = self.db.getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self.filings[0][0])
-        # self.db.close()
-
         self.db.manualConnect()
         details = self.db.getAllFilingEntityDetailsFromAccessionNumberNoFormerName(self.filings[0][0])
 

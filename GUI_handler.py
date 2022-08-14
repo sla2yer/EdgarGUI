@@ -51,7 +51,7 @@ class GUI_handler:
                                                     start_date=start_date_int,
                                                     end_date='',
                                                     temp_folder_directory=self.handler_files.getTempFolderDirectory(),
-                                                    count=100,
+                                                    count=1,
                                                     user_agent=ua)
 
         # ---------------it is possible that the error returned indicates a vpn error or a 'didn't find entity' error
@@ -154,8 +154,6 @@ class GUI_handler:
             entity_id = self.database.getEntityIDFromName(entity_name)
             if not self.database.isEntityAndFilingTypeTracked(entity_name, filing_type_string):
                 # then insert into the tracked table
-                print('not being tracked')
-
                 self.database.insertTrackedEntityFiling(filing_entity_id=entity_id, filing_type=filing_type_string, last_file_date=last_file_date)
             else: # the entity is already being tracked,
                 self.database.updateTrackedLastFileDate(filing_entity_id=entity_id, filing_type=filing_type_string, last_file_date=last_file_date)
@@ -204,12 +202,6 @@ class GUI_handler:
                     p.completeFilingEntity(self.database, entity)
             # if the entity is already in the database then check each filing with the accession numbers
             # to find if they need to be parsed or not
-        # - --------this is commented out for consolidation----------------------
-            # for number in list_of_accession_numbers:
-            #     # check if the accession number is not in the database
-            #     if not self.database.isAccessionNumberInDatabase(self.formatAccNumber(number)):
-            #         parser = Parser(self.handler_files.getFileText(number), str(filing_type))
-            #         parser.parseFiling(self.database, entity)
         else:
             # else the entity is not in the database then for the first accession number parse the entity
             print(f"gui handler 214: filing type: {filing_type}")
@@ -270,10 +262,6 @@ class GUI_handler:
         for s in string_list:
             int_list.append(int(s))
         return int_list
-
-    def setSecID_messageBox(self):
-
-        return
 
     def clearDB_messageBox(self):
         self.database.manualConnect()

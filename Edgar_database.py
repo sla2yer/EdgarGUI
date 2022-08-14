@@ -115,7 +115,10 @@ class EdgarDatabase:
         sql = "SELECT irs_number FROM FilingEntity WHERE entity_name = %(entity)s"
         self.cursor.execute(sql, {'entity': entity})
         result = self.cursor.fetchone()
-        return result[0]
+        if result is None:
+            return result
+        else:
+            return result[0]
 
     def getEntityCIK(self, entity):
         sql = "SELECT cik FROM FilingEntity WHERE entity_name = %(entity)s"
@@ -205,6 +208,7 @@ class EdgarDatabase:
             return False
 
     def isEntityAndFilingTypeInDatabase(self, entity_name, filing_type ):
+        print(f'isEntityAndFilingTypeInDatabase: filing_type:{filing_type}, Name:{entity_name},')
         sql = '''SELECT 
                     DISTINCT FilingEntity.entity_id 
                  FROM 
@@ -672,6 +676,7 @@ class EdgarDatabase:
         self.cursor.execute(sql, {'name': name, 'email': email})
 
     def getMostRecentFilingDateForFilingType(self, entity_name, filing_type):
+        print(f'getMostRecentFilingDateForFilingType,  name:{entity_name}, filing_type:{filing_type}')
         sql = '''SELECT 
                     MAX(Filing.filed_as_of_date)
                  FROM 
@@ -681,7 +686,7 @@ class EdgarDatabase:
                  AND
                     Filing.form_type LIKE CONCAT('%', %(filing_type)s, '%')
                  AND
-                    FilingEntity.entity_name CONCAT('%', %(entity_name)s, '%')
+                    FilingEntity.entity_name LIKE CONCAT('%', %(entity_name)s, '%')
         '''
         self.cursor.execute(sql, {'entity_name': entity_name, 'filing_type': filing_type})
         return self.cursor.fetchall()
