@@ -4,6 +4,8 @@ from Edgar_database import EdgarDatabase
 from Edgar_downloader import EdgarDownloader
 from File_manager import FileManager
 from Edgar_parser import Parser
+from datetime import datetime
+
 import re
 
 
@@ -141,6 +143,40 @@ class GUI_handler:
         FilingViewer(filings, toplevel)
         return
 
+    def isSecIdSet(self):
+        """
+        :return: true if SEC ID is set
+        """
+        self.database.manualConnect()
+        res = self.database.getSecID()
+        self.database.close()
+        return len(res) > 0
+
+    def checkForNewTrackedFilings(self, original_strings, filing_dict):
+        # original strings are in the following format
+        #      Entity Name          |       Filing Type      |      Last file Date'
+        self.database.manualConnect()
+        new_strings = ['     Entity Name          |       Filing Type      |      Last file Date']
+        for tracked_string in original_strings:
+            split_tracked = tracked_string.split('|')
+            filing_type = 'FILING_' + split_tracked[1].strip()
+            new_last_file_date = self.getMostRecentFilingDate_search(entity_name=split_tracked[0].strip(),
+                                                                     filing_type=filing_dict[filing_type])
+            new_last_file_date = datetime.strptime(new_last_file_date, '%Y-%m-%d')
+            current_last_file_date = datetime.strptime(split_tracked[2].strip(), '%d %B %Y')
+
+            if new_last_file_date > current_last_file_date:
+                temp_string = f"(NEW FILING)\t{split_tracked[0]}\t|{split_tracked[1]}|\t{new_last_file_date.strftime('%d %B %Y')}"
+                new_strings.append(temp_string)
+                entity_id = self.database.getEntityIDFromName(split_tracked[0].strip())
+                self.database.updateTrackedLastFileDate(filing_entity_id=entity_id,
+                                                        filing_type=split_tracked[1].strip(),
+                                                        last_file_date=str(new_last_file_date))
+                self.database.commit()
+            else:
+                new_strings.append(tracked_string)
+        return new_strings
+
     def trackButtonActions(self, entity_list, filing_type):
         print('tracked button actions')
         print(f'entity list: {entity_list}')
@@ -207,7 +243,6 @@ class GUI_handler:
             print(f"gui handler 214: filing type: {filing_type}")
             with Parser(self.handler_files.getFileText(list_of_accession_numbers[0], entity, filing_type_getText), filing_type) as p:
                 p.parseFilingAndEntity(self.database)
-        # -----------------this was tabbed left for consolidation------------------
         # now just get the details from the rest of the filings
         for number in list_of_accession_numbers:
             # check if the accession number is in the database

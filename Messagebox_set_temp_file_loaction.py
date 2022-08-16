@@ -18,7 +18,6 @@ class Messagebox_setTempFileLocaiton:
         else:
             current_string = current_string + str(current_res[0][1])
 
-
         toplevel = tk.Toplevel(root)
 
         self.stringVar_label_current = tk.StringVar(value=current_string)

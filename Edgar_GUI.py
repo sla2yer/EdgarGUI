@@ -18,7 +18,7 @@ import threading
 # Melvin Capital Management LP
 from Messagebox_set_sec_id import Messagebox_setSecId
 from Messagebox_set_temp_file_loaction import Messagebox_setTempFileLocaiton
-
+from Messagebox_no_sec_id import Messagebox_noSecId
 
 class SecGUI:
 
@@ -124,12 +124,12 @@ class SecGUI:
         self.button_track['state'] = tk.DISABLED
 
         self.button_open_seperatly_search_selected.grid(row=5, column=2)
-
-        self.button_search = tk.Button(root, text="search", padx=10, pady=10, command=self.searchButtonAction)
+        partial_search_button = partial(self.searchButtonAction, root)
+        self.button_search = tk.Button(root, text="search", padx=10, pady=10, command=partial_search_button)
         self.button_search.grid(row=2, column=4, stick=tk.N)
 
         self.button_manual_check = tk.Button(root, text="check for new filings", padx=10, pady=10,
-                                             command=self.checkButtonActions)
+                                             command=self.checkForNewFilingsButtonActions)
         self.button_manual_check.grid(row=0, column=4)
 
     def setSecID(self, root):
@@ -164,13 +164,18 @@ class SecGUI:
             i = 0
             i = i + 1
 
-    def updateTrackList(self):
+    def updateTrackList(self, string_list):
         print('updating tracked list')
         self.list_box_track.delete(0, tk.END)
         box_index = 0
-        for result in self.handler.getTrackedEntities():
-            self.list_box_track.insert(box_index, result)
-            box_index = box_index + 1
+        if len(string_list) == 0:
+            for result in self.handler.getTrackedEntities():
+                self.list_box_track.insert(box_index, result)
+                box_index = box_index + 1
+        else:
+            for string in string_list:
+                self.list_box_track.insert(box_index, string)
+                box_index = box_index + 1
 
     def trackButtonActions(self):
         # if filings were found in a given search and the track button is clicked
@@ -192,8 +197,8 @@ class SecGUI:
                 selection.remove(0)
             for index in selection:
                 entities_to_track.append(self.list_box_results.get(index))
-            self.handler.trackButtonActions(entities_to_track, self.stringVar_cbox_ftypes.get())
-        self.updateTrackList()
+            self.handler.trackButtonActions(entity_list=entities_to_track, filing_type=self.filling_dict[self.cbox_filing_types.get()])
+        self.updateTrackList([])
 
     def tempAction(self):
         # fv = FilingViewer()
@@ -239,10 +244,12 @@ class SecGUI:
                  'FILING_TA1', 'FILING_TA2', 'FILING_TAW']
         return flist
 
-    def searchButtonAction(self):
-
-        t = threading.Thread(target=self.threadSearchButtonAction)
-        t.start()
+    def searchButtonAction(self, root):
+        if self.handler.isSecIdSet():
+            t = threading.Thread(target=self.threadSearchButtonAction)
+            t.start()
+        else:
+            Messagebox_noSecId(root)
         return
 
     def threadSearchButtonAction(self):
@@ -287,9 +294,9 @@ class SecGUI:
                 self.button_track['state'] = tk.DISABLED
         self.handler.clearResultMessage()
 
-    def checkButtonActions(self):
-        temps = "hello"
-        temps
+    def checkForNewFilingsButtonActions(self):
+        if 'None' not in self.list_box_track.get(0):
+            new_strings = self.handler.checkForNewTrackedFilings(self.list_box_track.get(1, self.list_box_track.size()), self.filling_dict)
 
     def makeFilingDictionary(self):
         filingType_dictionary = {
