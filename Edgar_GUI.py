@@ -20,12 +20,12 @@ from Messagebox_set_sec_id import Messagebox_setSecId
 from Messagebox_set_temp_file_loaction import Messagebox_setTempFileLocaiton
 from Messagebox_no_sec_id import Messagebox_noSecId
 
-class SecGUI:
 
+class SecGUI:
     def __init__(self, root):
         """
 
-        :type root: tk.Tk()
+        :type: root tk.Tk()
         """
         self.windowThreads = []
         self.handler = GUI_handler()
@@ -254,7 +254,8 @@ class SecGUI:
 
     def threadSearchButtonAction(self):
         asyncio.set_event_loop(asyncio.new_event_loop())
-        # dates are passed to the handler as datetime objects, the handler then converts them to integers for the edgar search
+        # dates are passed to the handler as datetime objects,
+        # the handler then converts them to integers for the edgar search
         if self.checkbox_start_variable.get():
             start_date = str(self.calander_start.get_date())
         else:
@@ -264,7 +265,8 @@ class SecGUI:
         else:
             end_date = ""
 
-        # searchForFiling() returns false if no filings are found however, 0 results because of diff file type gives a true result
+        # searchForFiling() returns false if no filings are found however
+        # 0 results because of diff file type gives a true result
         # if True is returned, loop through getReultsMessage()
         print(self.filling_dict[self.cbox_filing_types.get()])
         self.list_box_results.delete(0, tk.END)
@@ -296,7 +298,9 @@ class SecGUI:
 
     def checkForNewFilingsButtonActions(self):
         if 'None' not in self.list_box_track.get(0):
-            new_strings = self.handler.checkForNewTrackedFilings(self.list_box_track.get(1, self.list_box_track.size()), self.filling_dict)
+            new_strings = self.handler.checkForNewTrackedFilings(self.list_box_track.get(1, self.list_box_track.size()),
+                                                                 self.filling_dict)
+            self.updateTrackList(new_strings)
 
     def makeFilingDictionary(self):
         filingType_dictionary = {

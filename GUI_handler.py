@@ -5,7 +5,6 @@ from Edgar_downloader import EdgarDownloader
 from File_manager import FileManager
 from Edgar_parser import Parser
 from datetime import datetime
-
 import re
 
 
@@ -175,6 +174,7 @@ class GUI_handler:
                 self.database.commit()
             else:
                 new_strings.append(tracked_string)
+        self.database.close()
         return new_strings
 
     def trackButtonActions(self, entity_list, filing_type):
