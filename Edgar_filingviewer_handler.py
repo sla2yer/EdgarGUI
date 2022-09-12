@@ -474,11 +474,18 @@ class FilingViewerHandler:
 
         del unchunked
         if 'All' not in pcla:
+            num_popped = 0
             for line in range(len(self.result_lines[0])):
                 if len(self.result_lines[0]) < 1:
                     print("ERROR efh481 resline len==0")
-                if pcla not in self.result_lines[0][line]:
-                    self.result_lines[1].append(self.result_lines[0].pop(line))
+                print("-------------------------------------------------")
+                print(line)
+                print(len(self.result_lines[0]))
+                print(len(self.result_lines))
+                print(len(self.result_lines[1]))
+                if pcla not in self.result_lines[0][line - num_popped]:
+                    self.result_lines[1].append(self.result_lines[0].pop(line - num_popped))
+                    num_popped = num_popped + 1
         self.result_lines[0] = list(self.chunks(self.result_lines[0], res_per_page))
 
     def sortFilings(self):
