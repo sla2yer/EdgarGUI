@@ -519,10 +519,16 @@ class FilingViewerHandler:
             names2 = set(db.checkForOtherManager(self.filings[date_indexes[1]][0]))
             if 'set' not in str(names2):
                 names2.update(names1)
-                return list(names2)
+                temp = ["All"]
+                for n in list(names2):
+                    temp.append(n[0])
+                return temp
             elif 'set' not in str(names1):
                 names1.update(names2)
-                return list(names1)
+                temp = ["All"]
+                for n in list(names1):
+                    temp.append(n[0])
+                return temp
             else:
                 return ['None']
 

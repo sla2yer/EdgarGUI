@@ -135,8 +135,6 @@ class GUI_handler:
     def foundEntity(self):
         return self.found_entity
 
-    def compareButtonActions(self):
-        return
 
     def openFilings(self, filings, toplevel):
         FilingViewer(filings, toplevel)

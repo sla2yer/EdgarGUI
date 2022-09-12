@@ -52,30 +52,47 @@ class SecGUI:
 
         self.menu_bar.add_cascade(label="File", menu=self.menu_file)
         root.config(menu=self.menu_bar)
-        # ----------FILING TYPE COMBO BOX------------------------------------
-        self.cbox_filing_types = tk.ttk.Combobox(root, textvariable=self.stringVar_cbox_ftypes)
+
+
+        # -------FILINGTYPE--------------------------------
+        self.frame_filingType = tk.Frame(root)
+        self.label_filingType = tk.Label(self.frame_filingType, text="Filing type to search for")
+        self.label_filingType.pack(side=tk.TOP)
+
+        self.cbox_filing_types = tk.ttk.Combobox(self.frame_filingType, textvariable=self.stringVar_cbox_ftypes)
         self.cbox_filing_types['values'] = filings
         self.cbox_filing_types['state'] = 'readonly'
-        self.cbox_filing_types.grid(row=3, column=1, sticky=tk.S)
+        self.cbox_filing_types.pack(side=tk.BOTTOM)
 
-        # -------LABELS FOR FILING TYPE, START DATE, END DATE--------------------------------
-        self.label_filingType = tk.Label(root, text="Filing type to search for")
-        self.label_filingType.grid(row=3, column=1, sticky=tk.N)
-        self.label_date_start = tk.Label(root, text="search from")
-        self.label_date_start.grid(row=3, column=2, sticky=tk.N)
-        self.label_date_end = tk.Label(root, text="Search until")
-        self.label_date_end.grid(row=3, column=3, sticky=tk.N)
+        self.frame_filingType.grid(row=3, column=1, sticky=tk.N)
+
+        self.frame_start_date = tk.Frame(root)
+        self.label_date_start = tk.Label(self.frame_start_date, text="search from")
+        self.label_date_start.pack(side=tk.TOP)
+        self.calander_start = tkcalendar.DateEntry(self.frame_start_date, width=16, background="magenta3", foreground="white",
+                                                   state=tk.DISABLED)
+        self.calander_start.pack(side=tk.BOTTOM)
+        self.frame_start_date.grid(row=3, column=2, sticky=tk.N)
+
+        self.frame_end_date = tk.Frame(root)
+        self.label_date_end = tk.Label(self.frame_end_date, text="Search until")
+        self.label_date_end.pack(side=tk.TOP)
+        self.calander_end = tkcalendar.DateEntry(self.frame_end_date, width=16, background="magenta3", foreground="white",
+                                                 state=tk.DISABLED)
+        self.calander_end.pack(side=tk.BOTTOM)
+
+
+        self.frame_end_date.grid(row=3, column=3, sticky=tk.N)
+        # ----------FILING TYPE COMBO BOX------------------------------------
+
 
         # ------------------------CALENDERS------------------------------------------
-        self.calander_start = tkcalendar.DateEntry(root, width=16, background="magenta3", foreground="white",
-                                                   state=tk.DISABLED)
-        self.calander_start.grid(row=3, column=2, sticky=tk.S)
-        self.calander_end = tkcalendar.DateEntry(root, width=16, background="magenta3", foreground="white",
-                                                 state=tk.DISABLED)
-        self.calander_end.grid(row=3, column=3, sticky=tk.S)
 
-        self.button_temp = tk.Button(root, text="temp", padx=10, pady=10, command=self.tempAction)
-        self.button_temp.grid(row=3, column=4, sticky=tk.S)
+
+
+        # self.button_temp = tk.Button(root, text="temp", padx=10, pady=10, command=self.tempAction)
+        # self.button_temp.grid(row=3, column=4, sticky=tk.S)
+        # self.button_temp.forget()
 
         # ----------------CALANDER USAGE CHECK BOXES---------------------
         self.checkbox_start_variable = tk.BooleanVar()
@@ -119,11 +136,9 @@ class SecGUI:
         self.button_open_seperatly_search_selected = tk.Button(root, text="Open Filings", padx=10, pady=10,
                                                                command=action_with_arg)
 
-        self.button_compare = tk.Button(root, text="Compare", padx=10, pady=10, command=self.compareButtonActions)
-        self.button_compare.grid(row=5, column=1)
         self.button_track['state'] = tk.DISABLED
 
-        self.button_open_seperatly_search_selected.grid(row=5, column=2)
+        self.button_open_seperatly_search_selected.grid(row=5, column=1)
         partial_search_button = partial(self.searchButtonAction, root)
         self.button_search = tk.Button(root, text="search", padx=10, pady=10, command=partial_search_button)
         self.button_search.grid(row=2, column=4, stick=tk.N)
@@ -147,8 +162,6 @@ class SecGUI:
         if res:
             self.handler.clearDB_messageBox()
 
-    def compareButtonActions(self):
-        self.handler.compareButtonActions()
 
     def openFilingsButtonActions(self, root):
         # Grab the items from the results list box and pass them into the handler

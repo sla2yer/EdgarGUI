@@ -74,11 +74,11 @@ class FilingViewer:
         self.label_results_header = tk.Label(self.root, text="\t\tname of issuer\t\t              | \tclass title\t|\tvalue\t\t|\tshrs/ prn amount\t| p/c/l\t|\tOther Manager")
         self.label_results_header.grid(row=5,  column=0, columnspan=8, sticky='w')
 
-        self.label_other_managers = tk.Label(self.root,  text="check to only show holding for the selected manager")
+        self.label_other_managers = tk.Label(self.root,  text="other managers")
         self.label_other_managers.grid(row=1,  column=6,  columnspan=2)
         self.bool_other_manager = tk.IntVar()
-        self.checkbutton_other_managager = tk.Checkbutton(self.root,  text="",  variable=self.bool_other_manager,  onvalue=1,  offvalue=0,  command=self.otherManagerCheckActions)
-        self.checkbutton_other_managager.grid(row=2,  column=6, sticky="e")
+        # self.checkbutton_other_managager = tk.Checkbutton(self.root,  text="",  variable=self.bool_other_manager,  onvalue=1,  offvalue=0,  command=self.otherManagerCheckActions)
+        # self.checkbutton_other_managager.grid(row=2,  column=6, sticky="e")
         self.cbox_other_managers = tk.ttk.Combobox(self.root, textvariable=tk.StringVar(self.root))
         self.cbox_other_managers['values'] = self.handler.getOtherManagers(self.cbox_date_from.get(), self.cbox_date_until.get())
         self.cbox_other_managers['state'] = 'readonly'
