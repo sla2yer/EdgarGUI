@@ -1,0 +1,2 @@
+secedgar==0.3.3
+tkcalendar==1.6.1
