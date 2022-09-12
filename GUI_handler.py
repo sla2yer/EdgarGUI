@@ -11,7 +11,7 @@ import re
 class GUI_handler:
     def __init__(self):
         self.downloader = EdgarDownloader()
-        self.database = EdgarDatabase(True)
+        self.database = EdgarDatabase(False)
         self.handler_files = FileManager()
         self.result_message_list = []
         self.found_entity = False

@@ -494,6 +494,7 @@ class FilingViewerHandler:
         self.filings = temp
 
     def searchFilingPositons(self, search_string, res_per_page):
+        search_string = search_string.upper()
         print('searching in handler: ' + search_string)
         temp = []
         for page in self.result_lines[0]:
