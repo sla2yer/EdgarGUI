@@ -83,7 +83,7 @@ class FilingViewerHandler:
             self.result_lines[0].extend(self.result_lines_19)
             self.result_lines[0].extend(self.result_lines_20)
             self.result_lines[0] = list(self.chunks(self.result_lines[0], parameters['res per page']))
-            self.sortResults('All', 'alphabetical', False, parameters['res per page'])
+            self.sortResults('All', 'alphabetical', False, parameters['res per page'], 'All')
 
         try:
             t = self.result_lines[0][parameters['page'] - 1]
@@ -447,7 +447,7 @@ class FilingViewerHandler:
         return page_string
         # else the values variable will contain ['cstring' : current_string, 'page_num':page_num]
 
-    def sortResults(self, pcla, sort_by, is_desc, res_per_page):
+    def sortResults(self, pcla, sort_by, is_desc, res_per_page, other_manager):
         unchunked = []
         if len(self.result_lines) > 1:
             unchunked.extend(self.result_lines[1])
@@ -473,14 +473,27 @@ class FilingViewerHandler:
                 ''.join(x.split('|')[2].split('(')[0].strip().split('$')[1].split(','))))
 
         del unchunked
-        if 'All' not in pcla:
+        print(other_manager)
+        if ('All' not in pcla and 'All' not in other_manager) or ('All' not in pcla or 'All' not in other_manager):
             num_popped = 0
+            popped = False
             for line in range(len(self.result_lines[0])):
                 if len(self.result_lines[0]) < 1:
-                    print("ERROR efh481 resline len==0")
-                if pcla not in self.result_lines[0][line - num_popped]:
+                    print("ERROR EFH481 resline len==0")
+                if pcla not in self.result_lines[0][line - num_popped] and 'All' not in pcla:
+                    print('popped pcla')
+                    print(f"popped: {self.result_lines[0][line - num_popped]}")
+                    popped = True
                     self.result_lines[1].append(self.result_lines[0].pop(line - num_popped))
                     num_popped = num_popped + 1
+
+                elif other_manager not in self.result_lines[0][line - num_popped] and not popped and 'All' not in other_manager:
+                    self.result_lines[1].append(self.result_lines[0].pop(line - num_popped))
+                    num_popped = num_popped + 1
+
+                else:
+                    print(f"not popped: {self.result_lines[0][line - num_popped]}")
+                popped = False
         self.result_lines[0] = list(self.chunks(self.result_lines[0], res_per_page))
 
     def sortFilings(self):
@@ -499,11 +512,15 @@ class FilingViewerHandler:
         temp = []
         for page in self.result_lines[0]:
             temp.extend(page)
-        if len(self.result_lines) > 1:
-            print('res lines len > 1')
-            temp.extend(self.result_lines[1])
-        del self.result_lines
-        self.result_lines = [[], []]
+
+        # if the code below is not commented then the search function will search all
+        # of the positions instead of the current filtration
+        #----------------------------------------------------------------------
+        # if len(self.result_lines) > 1:
+        #     print('res lines len > 1')
+        #     temp.extend(self.result_lines[1])
+        # del self.result_lines
+        self.result_lines[0] = []
         for position_line in temp:
             if search_string in str(position_line).split('|')[0]:
                 self.result_lines[0].append(position_line)

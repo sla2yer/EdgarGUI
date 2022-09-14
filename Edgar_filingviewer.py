@@ -132,7 +132,7 @@ class FilingViewer:
         return
 
     def sortButtonActions(self):
-        self.handler.sortResults(self.cbox_pcl.get(), self.stringvar_sortby.get(), 'desc' in self.cbox_asc_desc.get(), 50)
+        self.handler.sortResults(self.cbox_pcl.get(), self.stringvar_sortby.get(), 'desc' in self.cbox_asc_desc.get(), 50, self.cbox_other_managers.get())
         self.list_box_results.delete(0, tk.END)
         for result in self.handler.getResults({'page': int(self.stringVar_res_page.get())}):
             self.list_box_results.insert(tk.END, result)
